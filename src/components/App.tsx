@@ -13,39 +13,37 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import {
-  cnSetLetterAtLocation,
-  cnSetLettersNotAtLocation,
-  cnSetLettersNotInWord,
+  cnSetFirstWord,
+  cnSetSecondWord,
   cnListWords,
 } from '../controllers';
 
 import {
-  getLettersAtExactLocation,
-  getLettersNotAtExactLocation,
-  getLettersNotInWord,
+  getFirstWord,
+  getSecondWord,
   getPossibleWords,
   getInputError,
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
-import { isNil, isString } from 'lodash';
+import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
 }
 export interface AppProps {
-  lettersAtExactLocation: string[];
-  lettersNotAtExactLocation: string[];
-  lettersNotInWord: string;
+  firstWord: string;
+  secondWord: string;
+  onSetFirstWord: (lettersNotInWord: string) => any;
+  onSetSecondWord: (lettersNotInWord: string) => any;
   possibleWords: string[];
   inputError: string | null;
-  onSetLetterAtLocation: (index: number, letterAtLocation: string,) => any;
-  onSetLettersNotAtLocation: (index: number, lettersNotAtLocation: string) => any;
-  onSetLettersNotInWord: (lettersNotInWord: string) => any;
   onListWords: () => any;
 }
 
 const App = (props: AppProps) => {
+
+  let wordleCanvas: HTMLCanvasElement;
 
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
@@ -58,27 +56,18 @@ const App = (props: AppProps) => {
     console.log('app init invoked');
   };
 
-  const getLetterAtExactLocation = (index: number): string => {
-    return props.lettersAtExactLocation[index];
-  };
-
-  const getLettersNotAtExactLocation = (index: number): string => {
-    return props.lettersNotAtExactLocation[index];
-  };
-
-  const setLetterAtLocationHelper = (index: number, value: string) => {
-    props.onSetLetterAtLocation(index, value);
-  };
-
-  const setLettersNotAtLocationHelper = (index: number, value: string) => {
-    props.onSetLettersNotAtLocation(index, value);
-  };
-
-  const handleLettersNotInWordChanged = (event: any) => {
+  const handleFirstWordChanged = (event: any) => {
     console.log('new value');
     console.log(event.target.value);
-    props.onSetLettersNotInWord(event.target.value);
+    props.onSetFirstWord(event.target.value);
   };
+
+  const handleSecondWordChanged = (event: any) => {
+    console.log('new value');
+    console.log(event.target.value);
+    props.onSetSecondWord(event.target.value);
+  };
+
 
   const handleListWords = () => {
     if (isNil(props.inputError)) {
@@ -108,7 +97,7 @@ const App = (props: AppProps) => {
       if (typeof (callback) == 'function') {
         callback(undefined);
       }
-    };
+    }
 
     for (let i = 0; i < items.length; i++) {
       // Skip content if not image
@@ -127,8 +116,8 @@ const App = (props: AppProps) => {
     console.log(imageBlob);
 
     if (imageBlob) {
-      const canvas: any = document.getElementById('mycanvas');
-      const ctx = canvas.getContext('2d');
+      wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
+      const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
 
       // Create an image to render the blob on the canvas
       const img = new Image();
@@ -136,8 +125,8 @@ const App = (props: AppProps) => {
       // Once the image loads, render the img on the canvas
       img.onload = function () {
         // Update dimensions of the canvas with the dimensions of the image
-        canvas.width = 996;
-        canvas.height = 800;
+        wordleCanvas.width = 996;
+        wordleCanvas.height = 800;
 
         // Draw the image
         ctx.drawImage(img, 0, 0);
@@ -160,52 +149,30 @@ const App = (props: AppProps) => {
 
   const handleInputChanged = (event: any) => {
     console.log('handleInputChanged invoked');
-    console.log(event.target.value);
   };
 
-  const renderLetterInWordAtExactLocation = (index: number) => {
-    return (
-      <TextField
-        id={'letterInWordAtExactLocation' + index.toString()}
-        key={'letterInWordAtExactLocation' + index.toString()}
-        style={{ width: '42px' }}
-        inputProps={{ maxLength: 1 }}
-        variant='outlined'
-        value={getLetterAtExactLocation(index)}
-        onChange={() => setLetterAtLocationHelper(index, (event.target as any).value)}
-      />
+  const handleGetImageData = () => {
+    console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
+    // wordleCanvas dimensions:  996 800
 
-    );
-  };
+    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
+    // const imgData = ctx.getImageData(10, 10, 10, 10); // letter at exact location
+    // const imgData = ctx.getImageData(300, 10, 10, 10); // letter not in word
+    const imgData = ctx.getImageData(300, 220, 10, 10); // letter not not at exact
+    console.log('imageData');
+    console.log(imgData);
 
-  const renderLettersInWordAtExactLocation = () => {
-    const lettersInWordAtExactLocation = [];
-    for (let i = 0; i < 5; i++) {
-      lettersInWordAtExactLocation.push(renderLetterInWordAtExactLocation(i));
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      const red = imgData.data[i];
+      const green = imgData.data[i + 1];
+      const blue = imgData.data[i + 2];
+      const alpha = imgData.data[i + 3];
+
+      console.log('red: ', red);
+      console.log('green: ', green);
+      console.log('blue: ', blue);
+      console.log('alpha: ', alpha);
     }
-    return lettersInWordAtExactLocation;
-  };
-
-  const renderLetterInWordKnownNonLocation = (index: number) => {
-    return (
-      <TextField
-        id={'letterInWordAtKnownNonLocation' + index.toString()}
-        key={'letterInWordAtKnownNonLocation' + index.toString()}
-        style={{ width: '74px' }}
-        inputProps={{ maxLength: 5 }}
-        variant='outlined'
-        value={getLettersNotAtExactLocation(index)}
-        onChange={() => setLettersNotAtLocationHelper(index, (event.target as any).value)}
-      />
-    );
-  };
-
-  const renderLettersInWordKnownNonLocation = () => {
-    const lettersInWordKnownNonLocation = [];
-    for (let i = 0; i < 5; i++) {
-      lettersInWordKnownNonLocation.push(renderLetterInWordKnownNonLocation(i));
-    }
-    return lettersInWordKnownNonLocation;
   };
 
   const renderWord = (word: string) => {
@@ -252,8 +219,6 @@ const App = (props: AppProps) => {
 
   };
 
-  const lettersInWordAtExactLocation = renderLettersInWordAtExactLocation();
-  const lettersInWordKnownNonLocation = renderLettersInWordKnownNonLocation();
   const wordListElement = renderWordListElement();
 
   return (
@@ -287,21 +252,43 @@ const App = (props: AppProps) => {
         noValidate
         autoComplete='off'
       >
-        Letters in the word at their exact location:
-        {lettersInWordAtExactLocation}
-        <br />
-        Letters in the word at known non-location:
-        {lettersInWordKnownNonLocation}
-        <br />
-        Letters not in the word:
+        First word:
         <TextField
-          id='notInWord'
+          id='firstWord'
           style={{ width: '260px' }}
           inputProps={{ maxLength: 25 }}
           variant='outlined'
-          value={props.lettersNotInWord}
-          onChange={handleLettersNotInWordChanged}
+          value={props.firstWord}
+          onChange={handleFirstWordChanged}
         />
+        <br />
+        Second word:
+        <TextField
+          id='secondWord'
+          style={{ width: '260px' }}
+          inputProps={{ maxLength: 25 }}
+          variant='outlined'
+          value={props.secondWord}
+          onChange={handleSecondWordChanged}
+        />
+        <br />
+        <input
+          value='Paste here'
+          onPaste={handleClipboardEvent}
+          onChange={handleInputChanged}
+        />
+        <Button
+          variant='contained'
+          onClick={handleGetImageData}
+        >
+          Get Image Data
+        </Button>
+
+        <canvas
+          style={{ border: '1px solid grey' }}
+          id='mycanvas'
+        >
+        </canvas>
         <br />
         <Button
           variant='contained'
@@ -310,18 +297,7 @@ const App = (props: AppProps) => {
           List words
         </Button>
         {wordListElement}
-
-        <input
-          value='Paste here'
-          onPaste={handleClipboardEvent}
-          onChange={handleInputChanged}
-        />
-
-        <canvas
-          style={{ border: '1px solid grey' }}
-          id='mycanvas'
-        >
-        </canvas>
+        <br />
       </Box>
     </div>
   );
@@ -329,9 +305,8 @@ const App = (props: AppProps) => {
 
 function mapStateToProps(state: any) {
   return {
-    lettersAtExactLocation: getLettersAtExactLocation(state),
-    lettersNotAtExactLocation: getLettersNotAtExactLocation(state),
-    lettersNotInWord: getLettersNotInWord(state),
+    firstWord: getFirstWord(state),
+    secondWord: getSecondWord(state),
     possibleWords: getPossibleWords(state),
     inputError: getInputError(state),
   };
@@ -339,9 +314,8 @@ function mapStateToProps(state: any) {
 
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
-    onSetLetterAtLocation: cnSetLetterAtLocation,
-    onSetLettersNotAtLocation: cnSetLettersNotAtLocation,
-    onSetLettersNotInWord: cnSetLettersNotInWord,
+    onSetFirstWord: cnSetFirstWord,
+    onSetSecondWord: cnSetSecondWord,
     onListWords: cnListWords,
   }, dispatch);
 };
