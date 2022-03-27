@@ -16,6 +16,9 @@ import {
   cnSetFirstWord,
   cnSetSecondWord,
   cnListWords,
+  cnSetLetterAtLocation,
+  cnSetLettersNotAtLocation,
+  cnSetLettersNotInWord,
 } from '../controllers';
 
 import {
@@ -39,6 +42,9 @@ export interface AppProps {
   onSetSecondWord: (lettersNotInWord: string) => any;
   possibleWords: string[];
   inputError: string | null;
+  onSetLetterAtLocation: (index: number, letterAtLocation: string,) => any;
+  onSetLettersNotAtLocation: (index: number, lettersNotAtLocation: string) => any;
+  onSetLettersNotInWord: (lettersNotInWord: string) => any;
   onListWords: () => any;
 }
 
@@ -156,7 +162,14 @@ const App = (props: AppProps) => {
     console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
     // wordleCanvas dimensions:  996 800
 
+    const enteredWords: string[] = [];
+    enteredWords.push(props.firstWord);
+    enteredWords.push(props.secondWord);
+
     const letterAnswerValues: LetterAnswerType[][] = [];
+    const lettersAtExactLocation: string[] = ['', '', '', '', ''];
+    const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
+    let lettersNotInWord: string = '';
 
     const imageWidth = 996;
     const imageHeight = 400;
@@ -192,11 +205,33 @@ const App = (props: AppProps) => {
         console.log('alpha: ', alpha);
 
         letterAnswersInRow.push(letterAnswerType);
+
+        const currentCharacter: string = enteredWords[rowIndex].charAt(columnIndex);
+        
+        switch (letterAnswerType) {
+          case LetterAnswerType.InWordAtExactLocation:
+            lettersAtExactLocation[columnIndex] = currentCharacter;
+            props.onSetLetterAtLocation(columnIndex, currentCharacter);
+            break;
+          case LetterAnswerType.InWordAtNonLocation:
+            lettersNotAtExactLocation[columnIndex] = lettersNotAtExactLocation[columnIndex] + currentCharacter;
+            props.onSetLettersNotAtLocation(columnIndex, lettersNotAtExactLocation[columnIndex]);
+            break;
+          case LetterAnswerType.NotInWord:
+          default:
+            lettersNotInWord = lettersNotInWord + currentCharacter;
+            break;
+        }
       }
     }
 
+    props.onSetLettersNotInWord(lettersNotInWord);
+
     console.log('letterAnswerValues');
     console.log(letterAnswerValues);
+    console.log(lettersAtExactLocation);
+    console.log(lettersNotAtExactLocation);
+    console.log(lettersNotInWord);
   };
 
   const getLetterAnswerType = (imgData: any): LetterAnswerType => {
@@ -211,15 +246,15 @@ const App = (props: AppProps) => {
   };
 
   const isLetterAtExactLocation = (red: any, green: any, blue: any): boolean => {
-    return ((red === InWordAtExactLocationValue.red) && (green === InWordAtExactLocationValue.green) && (blue === InWordAtExactLocationValue.blue)); 
+    return ((red === InWordAtExactLocationValue.red) && (green === InWordAtExactLocationValue.green) && (blue === InWordAtExactLocationValue.blue));
   };
 
   const isLetterNotAtExactLocation = (red: any, green: any, blue: any): boolean => {
-    return ((red === InWordAtNonLocationValue.red) && (green === InWordAtNonLocationValue.green) && (blue === InWordAtNonLocationValue.blue)); 
+    return ((red === InWordAtNonLocationValue.red) && (green === InWordAtNonLocationValue.green) && (blue === InWordAtNonLocationValue.blue));
   };
 
   const isLetterNotInWord = (red: any, green: any, blue: any): boolean => {
-    return ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue)); 
+    return ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue));
   };
 
   const renderWord = (word: string) => {
@@ -363,6 +398,9 @@ const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
     onSetFirstWord: cnSetFirstWord,
     onSetSecondWord: cnSetSecondWord,
+    onSetLetterAtLocation: cnSetLetterAtLocation,
+    onSetLettersNotAtLocation: cnSetLettersNotAtLocation,
+    onSetLettersNotInWord: cnSetLettersNotInWord,
     onListWords: cnListWords,
   }, dispatch);
 };

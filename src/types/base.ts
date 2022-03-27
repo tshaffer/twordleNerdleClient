@@ -10,6 +10,9 @@ export interface TedState {
 export interface AppState {
   firstWord: string,
   secondWord: string,
+  lettersAtExactLocation: string[],         // each item in the array represents the correct letter for that position
+  lettersNotAtExactLocation: string[],      // each item in the array is a string of letters, where each letter is in the answer but not in that location
+  lettersNotInWord: string,                 // each letter in the string represents a letter that is not in the word
   possibleWords: string[],                  // words returned by the server that fit the criteria above
 }
 
