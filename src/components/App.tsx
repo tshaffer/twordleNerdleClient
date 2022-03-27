@@ -67,6 +67,7 @@ const App = (props: AppProps) => {
 
   const handleListWords = () => {
     if (isNil(props.inputError)) {
+      processImageData();
       setListWordsInvoked(true);
       props.onListWords();
     } else {
@@ -147,7 +148,7 @@ const App = (props: AppProps) => {
     console.log('handleInputChanged invoked');
   };
 
-  const handleGetImageData = () => {
+  const processImageData = () => {
     console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
     // wordleCanvas dimensions:  996 800
 
@@ -249,16 +250,11 @@ const App = (props: AppProps) => {
     return ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue));
   };
 
-  // const getGuess = (guessIndex: number) => {
-  //   return props.guesses[guessIndex];
-  // };
-
   const updateGuess = (guessIndex: number, guessValue: string) => {
     props.onUpdateGuess(guessIndex, guessValue);
   };
 
   const renderGuess = (guess: string, guessIndex: number) => {
-    // const guess = getGuess(guessIndex);
     return (
       <div>
         <TextField
@@ -376,13 +372,7 @@ const App = (props: AppProps) => {
           onPaste={handleClipboardEvent}
           onChange={handleInputChanged}
         />
-        <Button
-          variant='contained'
-          onClick={handleGetImageData}
-        >
-          Get Image Data
-        </Button>
-
+        <br />
         <canvas
           style={{ border: '1px solid grey' }}
           id='mycanvas'
