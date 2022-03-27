@@ -1,24 +1,20 @@
 import axios from 'axios';
 import { TedState } from '../types';
-import { setFirstWord, setSecondWord, setPossibleWords, setLetterAtLocation, setLettersNotAtLocation, setLettersNotInWord } from '../models';
-import { getFirstWord, getLettersAtExactLocation, getLettersNotAtExactLocation, getLettersNotInWord, getSecondWord } from '../selectors';
+import { setPossibleWords, setLetterAtLocation, setLettersNotAtLocation, setLettersNotInWord, addGuess, updateGuess } from '../models';
+import { getLettersAtExactLocation, getLettersNotAtExactLocation, getLettersNotInWord, getGuesses } from '../selectors';
 
 import { apiUrlFragment, serverUrl } from '../index';
 import { isNil } from 'lodash';
 
-export const cnSetFirstWord = (
-  firstWord: string,
-): any => {
+export const cnAddGuess = () => {
   return (dispatch: any) => {
-    dispatch(setFirstWord(firstWord));
+    dispatch(addGuess());
   };
 };
 
-export const cnSetSecondWord = (
-  firstWord: string,
-): any => {
+export const cnUpdateGuess = (guessIndex: number, guess: string) => {
   return (dispatch: any) => {
-    dispatch(setSecondWord(firstWord));
+    dispatch(updateGuess(guessIndex, guess));
   };
 };
 

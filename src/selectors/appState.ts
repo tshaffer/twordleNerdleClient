@@ -1,11 +1,7 @@
 import { TedState } from '../types/base';
 
-export const getFirstWord = (state: TedState): string => {
-  return state.appState.firstWord;
-};
-
-export const getSecondWord = (state: TedState): string => {
-  return state.appState.secondWord;
+export const getGuesses = (state: TedState): string[] => {
+  return state.appState.guesses;
 };
 
 export const getLettersAtExactLocation = (state: TedState): string[] => {

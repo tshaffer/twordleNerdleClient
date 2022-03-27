@@ -13,8 +13,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import {
-  cnSetFirstWord,
-  cnSetSecondWord,
+  cnAddGuess,
+  cnUpdateGuess,
   cnListWords,
   cnSetLetterAtLocation,
   cnSetLettersNotAtLocation,
@@ -22,10 +22,9 @@ import {
 } from '../controllers';
 
 import {
-  getFirstWord,
-  getSecondWord,
   getPossibleWords,
   getInputError,
+  getGuesses,
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
@@ -36,10 +35,9 @@ interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
 }
 export interface AppProps {
-  firstWord: string;
-  secondWord: string;
-  onSetFirstWord: (lettersNotInWord: string) => any;
-  onSetSecondWord: (lettersNotInWord: string) => any;
+  guesses: string[];
+  onAddGuess: () => any;
+  onUpdateGuess: (guessIndex: number, guess: string) => any;
   possibleWords: string[];
   inputError: string | null;
   onSetLetterAtLocation: (index: number, letterAtLocation: string,) => any;
@@ -63,18 +61,9 @@ const App = (props: AppProps) => {
     console.log('app init invoked');
   };
 
-  const handleFirstWordChanged = (event: any) => {
-    console.log('new value');
-    console.log(event.target.value);
-    props.onSetFirstWord(event.target.value);
+  const handleAddGuess = () => {
+    props.onAddGuess();
   };
-
-  const handleSecondWordChanged = (event: any) => {
-    console.log('new value');
-    console.log(event.target.value);
-    props.onSetSecondWord(event.target.value);
-  };
-
 
   const handleListWords = () => {
     if (isNil(props.inputError)) {
@@ -163,8 +152,11 @@ const App = (props: AppProps) => {
     // wordleCanvas dimensions:  996 800
 
     const enteredWords: string[] = [];
-    enteredWords.push(props.firstWord);
-    enteredWords.push(props.secondWord);
+    for (let i = 0; i < props.guesses.length; i++) {
+      if (props.guesses[i] !== '') {
+        enteredWords.push(props.guesses[i]);
+      }
+    }
 
     const letterAnswerValues: LetterAnswerType[][] = [];
     const lettersAtExactLocation: string[] = ['', '', '', '', ''];
@@ -207,7 +199,7 @@ const App = (props: AppProps) => {
         letterAnswersInRow.push(letterAnswerType);
 
         const currentCharacter: string = enteredWords[rowIndex].charAt(columnIndex);
-        
+
         switch (letterAnswerType) {
           case LetterAnswerType.InWordAtExactLocation:
             lettersAtExactLocation[columnIndex] = currentCharacter;
@@ -257,6 +249,38 @@ const App = (props: AppProps) => {
     return ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue));
   };
 
+  // const getGuess = (guessIndex: number) => {
+  //   return props.guesses[guessIndex];
+  // };
+
+  const updateGuess = (guessIndex: number, guessValue: string) => {
+    props.onUpdateGuess(guessIndex, guessValue);
+  };
+
+  const renderGuess = (guess: string, guessIndex: number) => {
+    // const guess = getGuess(guessIndex);
+    return (
+      <div>
+        <TextField
+          id={'guessIndex' + guessIndex.toString()}
+          key={'guessIndex' + guessIndex.toString()}
+          style={{ width: '86px' }}
+          inputProps={{ maxLength: 5 }}
+          variant='standard'
+          value={guess}
+          onChange={() => updateGuess(guessIndex, (event.target as any).value)}
+        />
+        <br />
+      </div>
+    );
+  };
+
+  const renderGuesses = () => {
+    return props.guesses.map((guess: string, index: number) => {
+      return renderGuess(guess, index);
+    });
+  };
+
   const renderWord = (word: string) => {
     return (
       <ListItem key={word}>
@@ -301,6 +325,8 @@ const App = (props: AppProps) => {
 
   };
 
+  const guesses = renderGuesses();
+
   const wordListElement = renderWordListElement();
 
   return (
@@ -334,25 +360,16 @@ const App = (props: AppProps) => {
         noValidate
         autoComplete='off'
       >
-        First word:
-        <TextField
-          id='firstWord'
-          style={{ width: '260px' }}
-          inputProps={{ maxLength: 25 }}
-          variant='outlined'
-          value={props.firstWord}
-          onChange={handleFirstWordChanged}
-        />
+        Guesses
         <br />
-        Second word:
-        <TextField
-          id='secondWord'
-          style={{ width: '260px' }}
-          inputProps={{ maxLength: 25 }}
-          variant='outlined'
-          value={props.secondWord}
-          onChange={handleSecondWordChanged}
-        />
+        {guesses}
+        <br />
+        <Button
+          variant='contained'
+          onClick={handleAddGuess}
+        >
+          Add Guess
+        </Button>
         <br />
         <input
           value='Paste here'
@@ -387,8 +404,7 @@ const App = (props: AppProps) => {
 
 function mapStateToProps(state: any) {
   return {
-    firstWord: getFirstWord(state),
-    secondWord: getSecondWord(state),
+    guesses: getGuesses(state),
     possibleWords: getPossibleWords(state),
     inputError: getInputError(state),
   };
@@ -396,8 +412,8 @@ function mapStateToProps(state: any) {
 
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
-    onSetFirstWord: cnSetFirstWord,
-    onSetSecondWord: cnSetSecondWord,
+    onAddGuess: cnAddGuess,
+    onUpdateGuess: cnUpdateGuess,
     onSetLetterAtLocation: cnSetLetterAtLocation,
     onSetLettersNotAtLocation: cnSetLettersNotAtLocation,
     onSetLettersNotInWord: cnSetLettersNotInWord,

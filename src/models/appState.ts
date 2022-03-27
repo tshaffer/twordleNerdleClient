@@ -6,8 +6,10 @@ import { TedModelBaseAction } from './baseAction';
 // ------------------------------------
 // Constants
 // ------------------------------------
-const SET_FIRST_WORD = 'SET_FIRST_WORD';
-const SET_SECOND_WORD = 'SET_SECOND_WORD';
+const ADD_GUESS = 'ADD_GUESS';
+const UPDATE_GUESS = 'UPDATE_GUESS';
+// const SET_FIRST_WORD = 'SET_FIRST_WORD';
+// const SET_SECOND_WORD = 'SET_SECOND_WORD';
 const SET_LETTER_AT_LOCATION = 'SET_LETTER_AT_LOCATION';
 const SET_LETTERS_NOT_AT_LOCATION = 'ADD_LETTER_NOT_AT_LOCATION';
 const SET_LETTERS_NOT_IN_WORD = 'SET_LETTERS_NOT_IN_WORD';
@@ -17,32 +19,28 @@ const SET_POSSIBLE_WORDS = 'SET_POSSIBLE_WORDS';
 // Actions
 // ------------------------------------
 
-export interface SetFirstWord {
-  firstWord: string,
-}
-
-export const setFirstWord = (
-  firstWord: string,
+export const addGuess = (
 ): any => {
   return {
-    type: SET_FIRST_WORD,
-    payload: {
-      firstWord,
-    },
+    type: ADD_GUESS,
   };
 };
 
-export interface SetSecondWord {
-  secondWord: string,
+
+export interface UpdateGuess {
+  guessIndex: number;
+  guess: string;
 }
 
-export const setSecondWord = (
-  secondWord: string,
+export const updateGuess = (
+  guessIndex: number,
+  guess: string,
 ): any => {
   return {
-    type: SET_SECOND_WORD,
+    type: UPDATE_GUESS,
     payload: {
-      secondWord,
+      guessIndex,
+      guess
     },
   };
 };
@@ -118,8 +116,7 @@ export const setPossibleWords = (
 // ------------------------------------
 
 const initialState: AppState = {
-  firstWord: '',
-  secondWord: '',
+  guesses: [''],
   lettersAtExactLocation: ['', '', '', '', ''],
   lettersNotAtExactLocation: ['', '', '', '', ''],
   lettersNotInWord: '',
@@ -128,14 +125,18 @@ const initialState: AppState = {
 
 export const appStateReducer = (
   state: AppState = initialState,
-  action: TedModelBaseAction<SetFirstWord & SetSecondWord & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
+  action: TedModelBaseAction<UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
 ): AppState => {
   switch (action.type) {
-    case SET_FIRST_WORD: {
-      return { ...state, firstWord: action.payload.firstWord };
+    case ADD_GUESS: {
+      const newState = cloneDeep(state);
+      newState.guesses.push('');
+      return newState;
     }
-    case SET_SECOND_WORD: {
-      return { ...state, secondWord: action.payload.secondWord };
+    case UPDATE_GUESS: {
+      const newState = cloneDeep(state);
+      newState.guesses[action.payload.guessIndex] = action.payload.guess;
+      return newState;
     }
     case SET_LETTER_AT_LOCATION: {
       const newState = cloneDeep(state);
