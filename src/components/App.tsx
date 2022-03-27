@@ -27,6 +27,7 @@ import {
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
+import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue } from '../types';
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
@@ -155,24 +156,70 @@ const App = (props: AppProps) => {
     console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
     // wordleCanvas dimensions:  996 800
 
+    const letterAnswerValues: LetterAnswerType[][] = [];
+
+    const imageWidth = 996;
+    const imageHeight = 400;
+
+    const numRows = 2;
+    const numColumns = 5;
+
+    const pixelsPerColumn = imageWidth / numColumns;
+    const pixelsPerRow = imageHeight / numRows;
+
     const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
-    // const imgData = ctx.getImageData(10, 10, 10, 10); // letter at exact location
-    // const imgData = ctx.getImageData(300, 10, 10, 10); // letter not in word
-    const imgData = ctx.getImageData(300, 220, 10, 10); // letter not not at exact
-    console.log('imageData');
-    console.log(imgData);
 
-    for (let i = 0; i < imgData.data.length; i += 4) {
-      const red = imgData.data[i];
-      const green = imgData.data[i + 1];
-      const blue = imgData.data[i + 2];
-      const alpha = imgData.data[i + 3];
+    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+      letterAnswerValues.push([]);
+      const letterAnswersInRow = letterAnswerValues[rowIndex];
+      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+        const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
+        const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
+        console.log('x = ', x, ', y = ', y);
 
-      console.log('red: ', red);
-      console.log('green: ', green);
-      console.log('blue: ', blue);
-      console.log('alpha: ', alpha);
+        const imgData: ImageData = ctx.getImageData(x, y, 10, 10);
+
+        const i = 0;
+        const red = imgData.data[i];
+        const green = imgData.data[i + 1];
+        const blue = imgData.data[i + 2];
+        const alpha = imgData.data[i + 3];
+
+        const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
+        console.log('red: ', red);
+        console.log('green: ', green);
+        console.log('blue: ', blue);
+        console.log('alpha: ', alpha);
+
+        letterAnswersInRow.push(letterAnswerType);
+      }
     }
+
+    console.log('letterAnswerValues');
+    console.log(letterAnswerValues);
+  };
+
+  const getLetterAnswerType = (imgData: any): LetterAnswerType => {
+    if (isLetterAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
+      return LetterAnswerType.InWordAtExactLocation;
+    } else if (isLetterNotAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
+      return LetterAnswerType.InWordAtNonLocation;
+    } else if (isLetterNotInWord(imgData.data[0], imgData.data[1], imgData.data[2])) {
+      return LetterAnswerType.NotInWord;
+    }
+    return LetterAnswerType.Unknown;
+  };
+
+  const isLetterAtExactLocation = (red: any, green: any, blue: any): boolean => {
+    return ((red === InWordAtExactLocationValue.red) && (green === InWordAtExactLocationValue.green) && (blue === InWordAtExactLocationValue.blue)); 
+  };
+
+  const isLetterNotAtExactLocation = (red: any, green: any, blue: any): boolean => {
+    return ((red === InWordAtNonLocationValue.red) && (green === InWordAtNonLocationValue.green) && (blue === InWordAtNonLocationValue.blue)); 
+  };
+
+  const isLetterNotInWord = (red: any, green: any, blue: any): boolean => {
+    return ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue)); 
   };
 
   const renderWord = (word: string) => {

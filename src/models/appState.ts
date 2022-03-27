@@ -78,7 +78,7 @@ export const appStateReducer = (
       return { ...state, firstWord: action.payload.firstWord };
     }
     case SET_SECOND_WORD: {
-      return { ...state, firstWord: action.payload.secondWord };
+      return { ...state, secondWord: action.payload.secondWord };
     }
     case SET_POSSIBLE_WORDS: {
       return { ...state, possibleWords: action.payload.possibleWords };
