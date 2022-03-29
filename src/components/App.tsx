@@ -49,6 +49,8 @@ export interface AppProps {
 const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
+  let imageWidth: number = -1;
+  let imageHeight: number = -1;
 
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
@@ -102,12 +104,29 @@ const App = (props: AppProps) => {
       // Retrieve image on clipboard as blob
       const blob = items[i].getAsFile();
 
-      if (typeof (callback) == 'function') {
-        callback(blob);
-      }
+      const fr = new FileReader();
+      fr.onload = function () { // file is loaded
+        const img = new Image;
+
+        img.onload = function () {
+          imageWidth = img.width;
+          imageHeight = img.height;
+          console.log('imageWidth = ', imageWidth);
+          console.log('imageHeight = ', imageHeight);
+
+          if (typeof (callback) == 'function') {
+            callback(blob);
+          }    
+        };
+
+        img.src = fr.result as any; // is the data URL because called with readAsDataURL
+      };
+
+      fr.readAsDataURL(blob);
     }
   };
 
+  // invoked when the user clicks on Paste
   const processImageBlob = (imageBlob) => {
     console.log('processImageBlob');
     console.log(imageBlob);
@@ -121,11 +140,13 @@ const App = (props: AppProps) => {
 
       // Once the image loads, render the img on the canvas
       img.onload = function () {
+
         // Update dimensions of the canvas with the dimensions of the image
-        wordleCanvas.width = 996;
-        wordleCanvas.height = 800;
+        wordleCanvas.width = imageWidth;
+        wordleCanvas.height = imageHeight;
 
         // Draw the image
+        console.log('drawImage: ', imageWidth, imageHeight);
         ctx.drawImage(img, 0, 0);
       };
 
@@ -148,9 +169,12 @@ const App = (props: AppProps) => {
     console.log('handleInputChanged invoked');
   };
 
+  // invoked when the user clicks on List Words
   const processImageData = () => {
+
+    wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
+
     console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
-    // wordleCanvas dimensions:  996 800
 
     const enteredWords: string[] = [];
     for (let i = 0; i < props.guesses.length; i++) {
@@ -164,10 +188,7 @@ const App = (props: AppProps) => {
     const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
     let lettersNotInWord: string = '';
 
-    const imageWidth = 996;
-    const imageHeight = 400;
-
-    const numRows = 2;
+    const numRows = enteredWords.length;
     const numColumns = 5;
 
     const pixelsPerColumn = imageWidth / numColumns;
