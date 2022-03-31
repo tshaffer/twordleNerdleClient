@@ -6,10 +6,10 @@ import { TedModelBaseAction } from './baseAction';
 // ------------------------------------
 // Constants
 // ------------------------------------
+const SET_IMAGE_WIDTH = 'SET_IMAGE_WIDTH';
+const SET_IMAGE_HEIGHT = 'SET_IMAGE_HEIGHT';
 const ADD_GUESS = 'ADD_GUESS';
 const UPDATE_GUESS = 'UPDATE_GUESS';
-// const SET_FIRST_WORD = 'SET_FIRST_WORD';
-// const SET_SECOND_WORD = 'SET_SECOND_WORD';
 const SET_LETTER_AT_LOCATION = 'SET_LETTER_AT_LOCATION';
 const SET_LETTERS_NOT_AT_LOCATION = 'ADD_LETTER_NOT_AT_LOCATION';
 const SET_LETTERS_NOT_IN_WORD = 'SET_LETTERS_NOT_IN_WORD';
@@ -18,6 +18,37 @@ const SET_POSSIBLE_WORDS = 'SET_POSSIBLE_WORDS';
 // ------------------------------------
 // Actions
 // ------------------------------------
+
+export interface SetImageWidth {
+  imageWidth: number;
+}
+
+export const setImageWidth = (
+  imageWidth: number,
+): any => {
+  return {
+    type: SET_IMAGE_WIDTH,
+    payload: {
+      imageWidth
+    },
+  };
+};
+
+export interface SetImageHeight {
+  imageHeight: number;
+}
+
+export const setImageHeight = (
+  imageHeight: number,
+): any => {
+  return {
+    type: SET_IMAGE_HEIGHT,
+    payload: {
+      imageHeight
+    },
+  };
+};
+
 
 export const addGuess = (
 ): any => {
@@ -116,6 +147,8 @@ export const setPossibleWords = (
 // ------------------------------------
 
 const initialState: AppState = {
+  imageWidth: -1,
+  imageHeight: -1,
   guesses: [''],
   lettersAtExactLocation: ['', '', '', '', ''],
   lettersNotAtExactLocation: ['', '', '', '', ''],
@@ -125,9 +158,17 @@ const initialState: AppState = {
 
 export const appStateReducer = (
   state: AppState = initialState,
-  action: TedModelBaseAction<UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
+  action: TedModelBaseAction<SetImageWidth & SetImageHeight & UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
 ): AppState => {
   switch (action.type) {
+    case SET_IMAGE_WIDTH: {
+      console.log('reducer: update imageWidth - ', action.payload.imageWidth);
+      return { ...state, imageWidth: action.payload.imageWidth };
+    }
+    case SET_IMAGE_HEIGHT: {
+      console.log('reducer: update imageHeight - ', action.payload.imageHeight);
+      return { ...state, imageHeight: action.payload.imageHeight };
+    }
     case ADD_GUESS: {
       const newState = cloneDeep(state);
       newState.guesses.push('');

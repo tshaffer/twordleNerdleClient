@@ -25,16 +25,23 @@ import {
   getPossibleWords,
   getInputError,
   getGuesses,
+  getImageWidth,
+  getImageHeight,
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
 import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue } from '../types';
+import { setImageHeight, setImageWidth } from '../models';
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
 }
 export interface AppProps {
+  imageWidth: number;
+  onSetImageWidth: (imageWidth: number) => any;
+  imageHeight: number;
+  onSetImageHeight: (imageWidth: number) => any;
   guesses: string[];
   onAddGuess: () => any;
   onUpdateGuess: (guessIndex: number, guess: string) => any;
@@ -49,19 +56,11 @@ export interface AppProps {
 const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
-  let imageWidth: number = -1;
-  let imageHeight: number = -1;
+
+  const dimensionsRef = React.useRef({imageWidth: -1, imageHeight: -1});
 
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    init();
-  }, []);
-
-  const init = () => {
-    console.log('app init invoked');
-  };
 
   const handleAddGuess = () => {
     props.onAddGuess();
@@ -109,14 +108,18 @@ const App = (props: AppProps) => {
         const img = new Image;
 
         img.onload = function () {
-          imageWidth = img.width;
-          imageHeight = img.height;
-          console.log('imageWidth = ', imageWidth);
-          console.log('imageHeight = ', imageHeight);
+          // setImageWidth(img.width);
+          // setImageHeight(img.height);
+          props.onSetImageWidth(img.width);
+          props.onSetImageHeight(img.height);
+          dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
+          console.log('imageWidth = ', props.imageWidth, ' imageHeight = ', props.imageHeight);
+          console.log('img.width = ', img.width, 'img.height = ', img.height);
+          console.log('dimensionsRef: ', dimensionsRef.current);
 
           if (typeof (callback) == 'function') {
             callback(blob);
-          }    
+          }
         };
 
         img.src = fr.result as any; // is the data URL because called with readAsDataURL
@@ -128,8 +131,6 @@ const App = (props: AppProps) => {
 
   // invoked when the user clicks on Paste
   const processImageBlob = (imageBlob) => {
-    console.log('processImageBlob');
-    console.log(imageBlob);
 
     if (imageBlob) {
       wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
@@ -142,11 +143,15 @@ const App = (props: AppProps) => {
       img.onload = function () {
 
         // Update dimensions of the canvas with the dimensions of the image
-        wordleCanvas.width = imageWidth;
-        wordleCanvas.height = imageHeight;
+        // wordleCanvas.width = props.imageWidth;
+        // wordleCanvas.height = props.imageHeight;
+        wordleCanvas.width = dimensionsRef.current.imageWidth;
+        wordleCanvas.height = dimensionsRef.current.imageHeight;
 
         // Draw the image
-        console.log('drawImage: ', imageWidth, imageHeight);
+        console.log('props: ', props);
+        console.log('drawImage: ', props.imageWidth, props.imageHeight);
+        console.log('dimensionsRef: ', dimensionsRef.current);
         ctx.drawImage(img, 0, 0);
       };
 
@@ -191,8 +196,8 @@ const App = (props: AppProps) => {
     const numRows = enteredWords.length;
     const numColumns = 5;
 
-    const pixelsPerColumn = imageWidth / numColumns;
-    const pixelsPerRow = imageHeight / numRows;
+    const pixelsPerColumn = props.imageWidth / numColumns;
+    const pixelsPerRow = props.imageHeight / numRows;
 
     const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
 
@@ -200,6 +205,7 @@ const App = (props: AppProps) => {
       letterAnswerValues.push([]);
       const letterAnswersInRow = letterAnswerValues[rowIndex];
       for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+        console.log('row: ', rowIndex, 'column: ', columnIndex);
         const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
         const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
         console.log('x = ', x, ', y = ', y);
@@ -213,10 +219,7 @@ const App = (props: AppProps) => {
         const alpha = imgData.data[i + 3];
 
         const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
-        console.log('red: ', red);
-        console.log('green: ', green);
-        console.log('blue: ', blue);
-        console.log('alpha: ', alpha);
+        console.log('red: ', red, 'green: ', green, 'blue: ', blue, 'alpha: ', alpha);
 
         letterAnswersInRow.push(letterAnswerType);
 
@@ -346,6 +349,8 @@ const App = (props: AppProps) => {
 
   const wordListElement = renderWordListElement();
 
+  console.log('render');
+
   return (
     <div>
       <Dialog
@@ -414,7 +419,10 @@ const App = (props: AppProps) => {
 };
 
 function mapStateToProps(state: any) {
+  console.log('mapStateToProps');
   return {
+    imageWidth: getImageWidth(state),
+    imageHeight: getImageHeight(state),
     guesses: getGuesses(state),
     possibleWords: getPossibleWords(state),
     inputError: getInputError(state),
@@ -423,6 +431,8 @@ function mapStateToProps(state: any) {
 
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
+    onSetImageWidth: setImageWidth,
+    onSetImageHeight: setImageHeight,
     onAddGuess: cnAddGuess,
     onUpdateGuess: cnUpdateGuess,
     onSetLetterAtLocation: cnSetLetterAtLocation,
