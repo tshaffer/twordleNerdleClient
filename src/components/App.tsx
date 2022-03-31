@@ -25,23 +25,16 @@ import {
   getPossibleWords,
   getInputError,
   getGuesses,
-  getImageWidth,
-  getImageHeight,
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
 import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue } from '../types';
-import { setImageHeight, setImageWidth } from '../models';
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
 }
 export interface AppProps {
-  imageWidth: number;
-  onSetImageWidth: (imageWidth: number) => any;
-  imageHeight: number;
-  onSetImageHeight: (imageWidth: number) => any;
   guesses: string[];
   onAddGuess: () => any;
   onUpdateGuess: (guessIndex: number, guess: string) => any;
@@ -110,10 +103,7 @@ const App = (props: AppProps) => {
         img.onload = function () {
           // setImageWidth(img.width);
           // setImageHeight(img.height);
-          props.onSetImageWidth(img.width);
-          props.onSetImageHeight(img.height);
           dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
-          console.log('imageWidth = ', props.imageWidth, ' imageHeight = ', props.imageHeight);
           console.log('img.width = ', img.width, 'img.height = ', img.height);
           console.log('dimensionsRef: ', dimensionsRef.current);
 
@@ -149,8 +139,6 @@ const App = (props: AppProps) => {
         wordleCanvas.height = dimensionsRef.current.imageHeight;
 
         // Draw the image
-        console.log('props: ', props);
-        console.log('drawImage: ', props.imageWidth, props.imageHeight);
         console.log('dimensionsRef: ', dimensionsRef.current);
         ctx.drawImage(img, 0, 0);
       };
@@ -196,8 +184,8 @@ const App = (props: AppProps) => {
     const numRows = enteredWords.length;
     const numColumns = 5;
 
-    const pixelsPerColumn = props.imageWidth / numColumns;
-    const pixelsPerRow = props.imageHeight / numRows;
+    const pixelsPerColumn = dimensionsRef.current.imageWidth / numColumns;
+    const pixelsPerRow = dimensionsRef.current.imageHeight / numRows;
 
     const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
 
@@ -421,8 +409,6 @@ const App = (props: AppProps) => {
 function mapStateToProps(state: any) {
   console.log('mapStateToProps');
   return {
-    imageWidth: getImageWidth(state),
-    imageHeight: getImageHeight(state),
     guesses: getGuesses(state),
     possibleWords: getPossibleWords(state),
     inputError: getInputError(state),
@@ -431,8 +417,6 @@ function mapStateToProps(state: any) {
 
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
-    onSetImageWidth: setImageWidth,
-    onSetImageHeight: setImageHeight,
     onAddGuess: cnAddGuess,
     onUpdateGuess: cnUpdateGuess,
     onSetLetterAtLocation: cnSetLetterAtLocation,

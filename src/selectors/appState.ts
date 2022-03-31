@@ -1,15 +1,5 @@
 import { TedState } from '../types/base';
 
-export const getImageWidth = (state: TedState): number => {
-  console.log('getImageWidth: ', state.appState);
-  return state.appState.imageWidth;
-};
-
-export const getImageHeight = (state: TedState): number => {
-  console.log('getImageHeight: ', state.appState);
-  return state.appState.imageHeight;
-};
-
 export const getGuesses = (state: TedState): string[] => {
   return state.appState.guesses;
 };
