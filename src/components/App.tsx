@@ -50,7 +50,7 @@ const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
 
-  const dimensionsRef = React.useRef({imageWidth: -1, imageHeight: -1});
+  const dimensionsRef = React.useRef({ imageWidth: -1, imageHeight: -1 });
 
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
@@ -85,7 +85,7 @@ const App = (props: AppProps) => {
     const items = pasteEvent.clipboardData.items;
 
     if (items == undefined) {
-      if (typeof (callback) == 'function') {
+      if (typeof (callback) === 'function') {
         callback(undefined);
       }
     }
@@ -237,14 +237,64 @@ const App = (props: AppProps) => {
     console.log(lettersAtExactLocation);
     console.log(lettersNotAtExactLocation);
     console.log(lettersNotInWord);
+
+    const wordleImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
+    console.log(wordleImageData);
+
+    let unknowns = 0;
+    let knowns = 0;
+
+    const imgData = wordleImageData.data;
+    for (let i = 0; i < imgData.length; i += 4) {
+      const red = imgData[i];
+      const green = imgData[i + 1];
+      const blue = imgData[i + 2];
+      const letterAnswerType: LetterAnswerType = getLetterAnswerTypeRgb(red, green, blue);
+      // if (letterAnswerType === LetterAnswerType.Unknown) {
+      //   console.log('unknown: ', red, green, blue);
+      // }
+      if (letterAnswerType !== LetterAnswerType.Unknown) {
+        knowns++;
+        imgData[i] = 0;
+        imgData[i + 1] = 0;
+        imgData[i + 2] = 0;
+      } else {
+        unknowns++;
+      }
+    }
+    
+    ctx.putImageData(wordleImageData, 0, 0);
+    
+    console.log('knowns: ', knowns);
+    console.log('unknowns: ', unknowns);
+
+    // invert canvas
+    // for (let i = 0; i < imgData.length; i += 4) {
+    //   imgData[i] = 255 - imgData[i];     // red
+    //   imgData[i + 1] = 255 - imgData[i + 1]; // green
+    //   imgData[i + 2] = 255 - imgData[i + 2]; // blue
+    // }
+    // ctx.putImageData(wordleImageData, 0, 0);
+
   };
 
-  const getLetterAnswerType = (imgData: any): LetterAnswerType => {
+  const getLetterAnswerType = (imgData: ImageData): LetterAnswerType => {
     if (isLetterAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
       return LetterAnswerType.InWordAtExactLocation;
     } else if (isLetterNotAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
       return LetterAnswerType.InWordAtNonLocation;
     } else if (isLetterNotInWord(imgData.data[0], imgData.data[1], imgData.data[2])) {
+      return LetterAnswerType.NotInWord;
+    }
+    return LetterAnswerType.Unknown;
+  };
+
+  const getLetterAnswerTypeRgb = (red: any, green: any, blue: any): LetterAnswerType => {
+    if (isLetterAtExactLocation(red, green, blue)) {
+      return LetterAnswerType.InWordAtExactLocation;
+    } else if (isLetterNotAtExactLocation(red, green, blue)) {
+      return LetterAnswerType.InWordAtNonLocation;
+    } else if (isLetterNotInWord(red, green, blue)) {
       return LetterAnswerType.NotInWord;
     }
     return LetterAnswerType.Unknown;
@@ -337,8 +387,6 @@ const App = (props: AppProps) => {
 
   const wordListElement = renderWordListElement();
 
-  console.log('render');
-
   return (
     <div>
       <Dialog
@@ -407,7 +455,6 @@ const App = (props: AppProps) => {
 };
 
 function mapStateToProps(state: any) {
-  console.log('mapStateToProps');
   return {
     guesses: getGuesses(state),
     possibleWords: getPossibleWords(state),

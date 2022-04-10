@@ -114,7 +114,7 @@ export const setPossibleWords = (
 // ------------------------------------
 
 const initialState: AppState = {
-  guesses: [''],
+  guesses: ['arise', 'mount'],
   lettersAtExactLocation: ['', '', '', '', ''],
   lettersNotAtExactLocation: ['', '', '', '', ''],
   lettersNotInWord: '',
