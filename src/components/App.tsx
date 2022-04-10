@@ -30,6 +30,7 @@ import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/materia
 import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
 import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue } from '../types';
+import _ = require('lodash');
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
@@ -244,6 +245,9 @@ const App = (props: AppProps) => {
     let unknowns = 0;
     let knowns = 0;
 
+    const unknownsByRowNumber: any = {};
+    const unknownsByColumnNumber: any = {};
+
     const imgData = wordleImageData.data;
     for (let i = 0; i < imgData.length; i += 4) {
       const red = imgData[i];
@@ -259,12 +263,62 @@ const App = (props: AppProps) => {
         imgData[i + 1] = 0;
         imgData[i + 2] = 0;
       } else {
+
         unknowns++;
+
+        const pixelIndex = Math.trunc(i / 4);
+
+        const rowNumber = Math.trunc(pixelIndex / wordleCanvas.width);
+
+        const pixelOffset = i - (rowNumber * wordleCanvas.width * 4);
+        const columnNumber = Math.trunc(pixelOffset / 4);
+
+        const rowKey = rowNumber.toString();
+        if (isNil(unknownsByRowNumber[rowKey])) {
+          unknownsByRowNumber[rowKey] = 0;
+        }
+        unknownsByRowNumber[rowKey]++;
+
+        if (unknownsByRowNumber[rowKey] === wordleCanvas.width) {
+          const rowStartIndex = rowNumber * wordleCanvas.width * 4;
+          for (let j = 0; j < (wordleCanvas.width * 4); j += 4) {
+            imgData[rowStartIndex + j] = 0;
+            imgData[rowStartIndex + j + 1] = 0;
+            imgData[rowStartIndex + j + 2] = 0;
+          }
+        }
+
+        const columnKey = columnNumber.toString();
+        if (isNil(unknownsByColumnNumber[rowKey])) {
+          unknownsByColumnNumber[columnKey] = 0;
+        }
+        unknownsByColumnNumber[columnKey]++;
+      }
+    }
+
+    for (const key in unknownsByColumnNumber) {
+      if (Object.prototype.hasOwnProperty.call(unknownsByColumnNumber, key)) {
+        const unknowns = unknownsByColumnNumber[key];
+        if (!isNil(unknowns) && unknowns > 100) {
+          const columnNumber = parseInt(key, 10);
+          console.log('convert rows in ', columnNumber, ' to black');
+
+          // number of rows = wordleCanvas.height
+          for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
+            const index = (rowIndex * wordleCanvas.width * 4) + (columnNumber * 4);
+            imgData[index] = 0;
+            imgData[index + 1] = 0;
+            imgData[index + 2] = 0;
+          }
+        }
       }
     }
     
+    console.log('unknownsByRowNumber', unknownsByRowNumber);
+    console.log('unknownsByColumnNumber', unknownsByColumnNumber);
+
     ctx.putImageData(wordleImageData, 0, 0);
-    
+
     console.log('knowns: ', knowns);
     console.log('unknowns: ', unknowns);
 
