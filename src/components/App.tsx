@@ -69,6 +69,11 @@ const App = (props: AppProps) => {
     return { row, column };
   };
 
+  const offsetFromPosition = (row: number, column: number): number => {
+    const offset = (row * wordleCanvas.width * 4) + (column * 4);
+    return offset;
+  };
+
   // invoked when the user clicks on List Words
   const processImageData = () => {
 
@@ -138,7 +143,7 @@ const App = (props: AppProps) => {
       let allPixelsInColumnAreWhite = true;
       for (let rowIndex = pixelOffsetFromEdge; rowIndex < (wordleCanvas.height - (pixelOffsetFromEdge * 2)); rowIndex++ ) {
         // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
-        const indexIntoWhiteAtImageDataRGBIndex = (columnIndex * wordleCanvas.width) + rowIndex;
+        const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
         if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
           allPixelsInColumnAreWhite = false;
           // break here if the code just breaks the inner loop
@@ -150,7 +155,7 @@ const App = (props: AppProps) => {
       }
     }
 
-    // convert pixels to black in the white rows and columns
+    // convert pixels to black in the white rows
     for (let rowIndex = 0; rowIndex < whiteRows.length; rowIndex++) {
       const whiteRowIndex = whiteRows[rowIndex];
       const rowStartIndex = whiteRowIndex * wordleCanvas.width * 4;
@@ -159,6 +164,19 @@ const App = (props: AppProps) => {
         imageDataRGB[rowStartIndex + columnOffset] = 0;
         imageDataRGB[rowStartIndex + columnOffset + 1] = 0;
         imageDataRGB[rowStartIndex + columnOffset + 2] = 0;
+      }
+    }
+
+    // convert pixels to black in the white columns
+    for (let indexIntoWhiteColumns = 0; indexIntoWhiteColumns < whiteColumns.length; indexIntoWhiteColumns++) {
+      const whiteColumnIndex = whiteColumns[indexIntoWhiteColumns];
+      // const columnStartIndex = whiteColumnIndex * wordleCanvas.height * 4;
+      for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
+        const offset = offsetFromPosition(rowIndex, whiteColumnIndex);
+        // const columnOffset = columnIndex * 4;
+        imageDataRGB[offset] = 0;
+        imageDataRGB[offset + 1] = 0;
+        imageDataRGB[offset + 2] = 0;
       }
     }
 
