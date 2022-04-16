@@ -27,7 +27,7 @@ import {
   getGuesses,
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
-import { isNil } from 'lodash';
+import { isNil, isUndefined } from 'lodash';
 import { SyntheticEvent } from 'react';
 import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue } from '../types';
 import _ = require('lodash');
@@ -47,6 +47,11 @@ export interface AppProps {
   onListWords: () => any;
 }
 
+interface PixelPosition {
+  row: number;
+  column: number;
+}
+
 const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
@@ -56,12 +61,108 @@ const App = (props: AppProps) => {
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
 
+  const positionFromOffset = (offset: number): PixelPosition => {
+    const pixelIndex = Math.trunc(offset / 4);
+    const row = Math.trunc(pixelIndex / wordleCanvas.width);
+    const pixelOffset = offset - (row * wordleCanvas.width * 4);
+    const column = Math.trunc(pixelOffset / 4);
+    return { row, column };
+  };
+
   // invoked when the user clicks on List Words
   const processImageData = () => {
 
     wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
 
     console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
+
+    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
+
+    const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
+    const imageDataRGB: Uint8ClampedArray = allImageData.data;
+
+    const whiteValue = 255;
+
+    let whiteCount = 0;
+    const whiteAtImageDataRGBIndex: boolean[] = [];
+    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
+      const red = imageDataRGB[imageDataIndex];
+      const green = imageDataRGB[imageDataIndex + 1];
+      const blue = imageDataRGB[imageDataIndex + 2];
+      if (red === whiteValue && green == whiteValue && blue === whiteValue) {
+        whiteAtImageDataRGBIndex.push(true);
+        whiteCount++;
+      } else {
+        whiteAtImageDataRGBIndex.push(false);
+      }
+    }
+
+    console.log('whiteCount');
+    console.log(whiteCount);
+    
+    console.log('whiteAtImageDataRGBIndex');
+    console.log(whiteAtImageDataRGBIndex);
+
+    // find all white rows
+    const pixelOffsetFromEdge = 10;
+    for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
+      let allPixelsInRowAreWhite = true;
+      for (let columnIndex = pixelOffsetFromEdge; columnIndex < (wordleCanvas.width - (pixelOffsetFromEdge * 2)); columnIndex++ ) {
+        // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
+        const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
+        if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
+          allPixelsInRowAreWhite = false;
+          // break here if the code just breaks the inner loop
+        }
+      }
+      if (allPixelsInRowAreWhite) {
+        console.log('allPixelsInRowAreWhite', rowIndex);
+      }
+    }
+
+    let maxValueOfIdenticalPixels = 0;
+    let pixelsAtMaxValue = 0;
+
+    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
+      const red = imageDataRGB[imageDataIndex];
+      const green = imageDataRGB[imageDataIndex + 1];
+      const blue = imageDataRGB[imageDataIndex + 2];
+      if (red === green && red === blue) {
+        if (red > maxValueOfIdenticalPixels) {
+          maxValueOfIdenticalPixels = red;
+          pixelsAtMaxValue = 1;
+        } else if (red === maxValueOfIdenticalPixels) {
+          pixelsAtMaxValue++;
+        }
+      }
+    }
+    
+    console.log('Max: ', maxValueOfIdenticalPixels, pixelsAtMaxValue);
+
+
+    // check for pixels with identical rgb
+    const identicalPixelCountByRGB = {};
+
+    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
+      const red = imageDataRGB[imageDataIndex];
+      const green = imageDataRGB[imageDataIndex + 1];
+      const blue = imageDataRGB[imageDataIndex + 2];
+      if (red === green && red === blue) {
+        const key = red.toString() + green.toString() + blue.toString();
+        if (isNil(identicalPixelCountByRGB[key]) || isUndefined(identicalPixelCountByRGB[key])) {
+          identicalPixelCountByRGB[key] = 0;
+        } else {
+          identicalPixelCountByRGB[key]++;
+        }
+      }
+    }
+
+    console.log('Identical values: ', identicalPixelCountByRGB);
+
+
+    // conclusion - the pixels I'm looking for are 255, 255, 255. Next step, get the appropriate rows & columns for the pixels that are the dividers
+
+    // convert image to x, y
 
     const enteredWords: string[] = [];
     for (let i = 0; i < props.guesses.length; i++) {
@@ -70,18 +171,54 @@ const App = (props: AppProps) => {
       }
     }
 
-    const letterAnswerValues: LetterAnswerType[][] = [];
-    const lettersAtExactLocation: string[] = ['', '', '', '', ''];
-    const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
-    let lettersNotInWord: string = '';
-
     const numRows = enteredWords.length;
     const numColumns = 5;
 
     const pixelsPerColumn = dimensionsRef.current.imageWidth / numColumns;
     const pixelsPerRow = dimensionsRef.current.imageHeight / numRows;
 
-    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
+    let numWhiteValues = 0;
+    // let maxImageDataProduct = 0;
+    // let pixelsWithMaxProduct = 0;
+    // let redAtMax = 0;
+    // let greenAtMax = 0;
+    // let blueAtMax = 0;
+
+    
+    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+
+        const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
+        const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
+        const imgData: ImageData = ctx.getImageData(x, y, 1, 1);
+        const red = imgData.data[0];
+        const green = imgData.data[1];
+        const blue = imgData.data[2];
+
+        if (red === whiteValue && green === whiteValue && blue === whiteValue) {
+          numWhiteValues++;
+        }
+
+        // const newImageDataProduct = red * green * blue;
+        // if (newImageDataProduct > maxImageDataProduct) {
+        //   maxImageDataProduct = newImageDataProduct;
+        //   pixelsWithMaxProduct = 1;
+        //   redAtMax = red;
+        //   greenAtMax = green;
+        //   blueAtMax = blue;
+        // } else if (newImageDataProduct === maxImageDataProduct) {
+        //   pixelsWithMaxProduct = pixelsWithMaxProduct++;
+        // }
+      }
+    }
+
+    // console.log('max values: ', maxImageDataProduct, pixelsWithMaxProduct, redAtMax, greenAtMax, blueAtMax);
+    console.log('numWhiteValues: ', numWhiteValues);
+
+    const letterAnswerValues: LetterAnswerType[][] = [];
+    const lettersAtExactLocation: string[] = ['', '', '', '', ''];
+    const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
+    let lettersNotInWord: string = '';
 
     for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
       letterAnswerValues.push([]);
@@ -266,26 +403,7 @@ const App = (props: AppProps) => {
   };
 
 
-
-  const handleAddGuess = () => {
-    props.onAddGuess();
-  };
-
-  const handleListWords = () => {
-    if (isNil(props.inputError)) {
-      processImageData();
-      setListWordsInvoked(true);
-      props.onListWords();
-    } else {
-      console.log('Error: ' + props.inputError);
-      setErrorDialogOpen(true);
-    }
-  };
-
-  const handleCloseErrorDialog = () => {
-    setErrorDialogOpen(false);
-  };
-
+  // invoked on paste event
   const retrieveImageFromClipboardAsBlob = (pasteEvent) => {
 
     if (pasteEvent.clipboardData == false) {
@@ -325,7 +443,7 @@ const App = (props: AppProps) => {
     }
   };
 
-  // invoked when the user clicks on Paste
+  // invoked after pasted image data is loaded
   const processImageBlob = (imageBlob) => {
 
     if (imageBlob) {
@@ -356,6 +474,25 @@ const App = (props: AppProps) => {
       // namely the original Blob
       img.src = URLObj.createObjectURL(imageBlob);
     }
+  };
+
+  const handleAddGuess = () => {
+    props.onAddGuess();
+  };
+
+  const handleListWords = () => {
+    if (isNil(props.inputError)) {
+      processImageData();
+      setListWordsInvoked(true);
+      props.onListWords();
+    } else {
+      console.log('Error: ' + props.inputError);
+      setErrorDialogOpen(true);
+    }
+  };
+
+  const handleCloseErrorDialog = () => {
+    setErrorDialogOpen(false);
   };
 
   const handleClipboardEvent = (e: ClipboardEvent<HTMLInputElement>) => {
