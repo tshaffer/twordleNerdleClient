@@ -56,113 +56,6 @@ const App = (props: AppProps) => {
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
 
-  const handleAddGuess = () => {
-    props.onAddGuess();
-  };
-
-  const handleListWords = () => {
-    if (isNil(props.inputError)) {
-      processImageData();
-      setListWordsInvoked(true);
-      props.onListWords();
-    } else {
-      console.log('Error: ' + props.inputError);
-      setErrorDialogOpen(true);
-    }
-  };
-
-  const handleCloseErrorDialog = () => {
-    setErrorDialogOpen(false);
-  };
-
-  const retrieveImageFromClipboardAsBlob = (pasteEvent, callback) => {
-
-    if (pasteEvent.clipboardData == false) {
-      if (typeof (callback) == 'function') {
-        callback(undefined);
-      }
-    }
-
-    const items = pasteEvent.clipboardData.items;
-
-    if (items == undefined) {
-      if (typeof (callback) === 'function') {
-        callback(undefined);
-      }
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      // Skip content if not image
-      if (items[i].type.indexOf('image') == -1) continue;
-      // Retrieve image on clipboard as blob
-      const blob = items[i].getAsFile();
-
-      const fr = new FileReader();
-      fr.onload = function () { // file is loaded
-        const img = new Image;
-
-        img.onload = function () {
-          // setImageWidth(img.width);
-          // setImageHeight(img.height);
-          dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
-          console.log('img.width = ', img.width, 'img.height = ', img.height);
-          console.log('dimensionsRef: ', dimensionsRef.current);
-
-          if (typeof (callback) == 'function') {
-            callback(blob);
-          }
-        };
-
-        img.src = fr.result as any; // is the data URL because called with readAsDataURL
-      };
-
-      fr.readAsDataURL(blob);
-    }
-  };
-
-  // invoked when the user clicks on Paste
-  const processImageBlob = (imageBlob) => {
-
-    if (imageBlob) {
-      wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
-      const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
-
-      // Create an image to render the blob on the canvas
-      const img = new Image();
-
-      // Once the image loads, render the img on the canvas
-      img.onload = function () {
-
-        // Update dimensions of the canvas with the dimensions of the image
-        // wordleCanvas.width = props.imageWidth;
-        // wordleCanvas.height = props.imageHeight;
-        wordleCanvas.width = dimensionsRef.current.imageWidth;
-        wordleCanvas.height = dimensionsRef.current.imageHeight;
-
-        // Draw the image
-        console.log('dimensionsRef: ', dimensionsRef.current);
-        ctx.drawImage(img, 0, 0);
-      };
-
-      // Crossbrowser support for URL
-      const URLObj = window.URL || window.webkitURL;
-
-      // Creates a DOMString containing a URL representing the object given in the parameter
-      // namely the original Blob
-      img.src = URLObj.createObjectURL(imageBlob);
-    }
-  };
-
-  const handleClipboardEvent = (e: ClipboardEvent<HTMLInputElement>) => {
-    // Do something
-    console.log('handleClipboardEvent invoked');
-    retrieveImageFromClipboardAsBlob(e, processImageBlob);
-  };
-
-  const handleInputChanged = (event: any) => {
-    console.log('handleInputChanged invoked');
-  };
-
   // invoked when the user clicks on List Words
   const processImageData = () => {
 
@@ -315,7 +208,7 @@ const App = (props: AppProps) => {
         }
       }
     }
-    
+
     // console.log('unknownsByRowNumber', unknownsByRowNumber);
     console.log('unknownsByColumnNumber', unknownsByColumnNumber);
 
@@ -370,6 +263,107 @@ const App = (props: AppProps) => {
 
   const updateGuess = (guessIndex: number, guessValue: string) => {
     props.onUpdateGuess(guessIndex, guessValue);
+  };
+
+
+
+  const handleAddGuess = () => {
+    props.onAddGuess();
+  };
+
+  const handleListWords = () => {
+    if (isNil(props.inputError)) {
+      processImageData();
+      setListWordsInvoked(true);
+      props.onListWords();
+    } else {
+      console.log('Error: ' + props.inputError);
+      setErrorDialogOpen(true);
+    }
+  };
+
+  const handleCloseErrorDialog = () => {
+    setErrorDialogOpen(false);
+  };
+
+  const retrieveImageFromClipboardAsBlob = (pasteEvent) => {
+
+    if (pasteEvent.clipboardData == false) {
+      processImageBlob(undefined);
+    }
+
+    const items = pasteEvent.clipboardData.items;
+
+    if (items == undefined) {
+      processImageBlob(undefined);
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      // Skip content if not image
+      if (items[i].type.indexOf('image') == -1) continue;
+      // Retrieve image on clipboard as blob
+      const blob = items[i].getAsFile();
+
+      const fr = new FileReader();
+      fr.onload = function () { // file is loaded
+        const img = new Image;
+
+        img.onload = function () {
+          // setImageWidth(img.width);
+          // setImageHeight(img.height);
+          dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
+          console.log('img.width = ', img.width, 'img.height = ', img.height);
+          console.log('dimensionsRef: ', dimensionsRef.current);
+
+          processImageBlob(blob);
+        };
+
+        img.src = fr.result as any; // is the data URL because called with readAsDataURL
+      };
+
+      fr.readAsDataURL(blob);
+    }
+  };
+
+  // invoked when the user clicks on Paste
+  const processImageBlob = (imageBlob) => {
+
+    if (imageBlob) {
+      wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
+      const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
+
+      // Create an image to render the blob on the canvas
+      const img = new Image();
+
+      // Once the image loads, render the img on the canvas
+      img.onload = function () {
+
+        // Update dimensions of the canvas with the dimensions of the image
+        // wordleCanvas.width = props.imageWidth;
+        // wordleCanvas.height = props.imageHeight;
+        wordleCanvas.width = dimensionsRef.current.imageWidth;
+        wordleCanvas.height = dimensionsRef.current.imageHeight;
+
+        // Draw the image
+        console.log('dimensionsRef: ', dimensionsRef.current);
+        ctx.drawImage(img, 0, 0);
+      };
+
+      // Crossbrowser support for URL
+      const URLObj = window.URL || window.webkitURL;
+
+      // Creates a DOMString containing a URL representing the object given in the parameter
+      // namely the original Blob
+      img.src = URLObj.createObjectURL(imageBlob);
+    }
+  };
+
+  const handleClipboardEvent = (e: ClipboardEvent<HTMLInputElement>) => {
+    retrieveImageFromClipboardAsBlob(e);
+  };
+
+  const handleInputChanged = (event: any) => {
+    console.log('handleInputChanged invoked');
   };
 
   const renderGuess = (guess: string, guessIndex: number) => {
