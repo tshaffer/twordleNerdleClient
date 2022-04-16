@@ -103,8 +103,9 @@ const App = (props: AppProps) => {
     console.log('whiteAtImageDataRGBIndex');
     console.log(whiteAtImageDataRGBIndex);
 
-    // find all white rows
     const pixelOffsetFromEdge = 10;
+
+    // find all white rows
     for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
       let allPixelsInRowAreWhite = true;
       for (let columnIndex = pixelOffsetFromEdge; columnIndex < (wordleCanvas.width - (pixelOffsetFromEdge * 2)); columnIndex++ ) {
@@ -117,6 +118,22 @@ const App = (props: AppProps) => {
       }
       if (allPixelsInRowAreWhite) {
         console.log('allPixelsInRowAreWhite', rowIndex);
+      }
+    }
+
+    // find all white columns
+    for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
+      let allPixelsInColumnAreWhite = true;
+      for (let rowIndex = pixelOffsetFromEdge; rowIndex < (wordleCanvas.height - (pixelOffsetFromEdge * 2)); rowIndex++ ) {
+        // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
+        const indexIntoWhiteAtImageDataRGBIndex = (columnIndex * wordleCanvas.width) + rowIndex;
+        if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
+          allPixelsInColumnAreWhite = false;
+          // break here if the code just breaks the inner loop
+        }
+      }
+      if (allPixelsInColumnAreWhite) {
+        console.log('allPixelsInColumnAreWhite', columnIndex);
       }
     }
 
