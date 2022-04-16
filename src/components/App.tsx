@@ -83,8 +83,15 @@ const App = (props: AppProps) => {
 
     const whiteValue = 255;
 
-    let whiteCount = 0;
+    // whiteAtImageDataRGBIndex
+    //    length is canvas width * canvas height
+    //    that is, there's one entry in this array for each set of image pixels (4 bytes) in imageDataRGB
+    //    index into this array for a given rowIndex, columnIndex is therefore
+    //        (rowIndex * canvasWidth) + columnIndex
+
     const whiteAtImageDataRGBIndex: boolean[] = [];
+
+    let whiteCount = 0;
     for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
       const red = imageDataRGB[imageDataIndex];
       const green = imageDataRGB[imageDataIndex + 1];
@@ -106,6 +113,7 @@ const App = (props: AppProps) => {
     const pixelOffsetFromEdge = 10;
 
     // find all white rows
+    const whiteRows: number[] = [];
     for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
       let allPixelsInRowAreWhite = true;
       for (let columnIndex = pixelOffsetFromEdge; columnIndex < (wordleCanvas.width - (pixelOffsetFromEdge * 2)); columnIndex++ ) {
@@ -118,10 +126,14 @@ const App = (props: AppProps) => {
       }
       if (allPixelsInRowAreWhite) {
         console.log('allPixelsInRowAreWhite', rowIndex);
+        whiteRows.push(rowIndex);
+
+        // 
       }
     }
 
     // find all white columns
+    const whiteColumns: number[] = [];
     for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
       let allPixelsInColumnAreWhite = true;
       for (let rowIndex = pixelOffsetFromEdge; rowIndex < (wordleCanvas.height - (pixelOffsetFromEdge * 2)); rowIndex++ ) {
@@ -134,50 +146,25 @@ const App = (props: AppProps) => {
       }
       if (allPixelsInColumnAreWhite) {
         console.log('allPixelsInColumnAreWhite', columnIndex);
+        whiteColumns.push(columnIndex);
       }
     }
 
-    let maxValueOfIdenticalPixels = 0;
-    let pixelsAtMaxValue = 0;
-
-    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
-      const red = imageDataRGB[imageDataIndex];
-      const green = imageDataRGB[imageDataIndex + 1];
-      const blue = imageDataRGB[imageDataIndex + 2];
-      if (red === green && red === blue) {
-        if (red > maxValueOfIdenticalPixels) {
-          maxValueOfIdenticalPixels = red;
-          pixelsAtMaxValue = 1;
-        } else if (red === maxValueOfIdenticalPixels) {
-          pixelsAtMaxValue++;
-        }
-      }
-    }
-    
-    console.log('Max: ', maxValueOfIdenticalPixels, pixelsAtMaxValue);
-
-
-    // check for pixels with identical rgb
-    const identicalPixelCountByRGB = {};
-
-    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
-      const red = imageDataRGB[imageDataIndex];
-      const green = imageDataRGB[imageDataIndex + 1];
-      const blue = imageDataRGB[imageDataIndex + 2];
-      if (red === green && red === blue) {
-        const key = red.toString() + green.toString() + blue.toString();
-        if (isNil(identicalPixelCountByRGB[key]) || isUndefined(identicalPixelCountByRGB[key])) {
-          identicalPixelCountByRGB[key] = 0;
-        } else {
-          identicalPixelCountByRGB[key]++;
-        }
+    // convert pixels to black in the white rows and columns
+    for (let rowIndex = 0; rowIndex < whiteRows.length; rowIndex++) {
+      const whiteRowIndex = whiteRows[rowIndex];
+      const rowStartIndex = whiteRowIndex * wordleCanvas.width * 4;
+      for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
+        const columnOffset = columnIndex * 4;
+        imageDataRGB[rowStartIndex + columnOffset] = 0;
+        imageDataRGB[rowStartIndex + columnOffset + 1] = 0;
+        imageDataRGB[rowStartIndex + columnOffset + 2] = 0;
       }
     }
 
-    console.log('Identical values: ', identicalPixelCountByRGB);
+    ctx.putImageData(allImageData, 0, 0);
 
-
-    // conclusion - the pixels I'm looking for are 255, 255, 255. Next step, get the appropriate rows & columns for the pixels that are the dividers
+    return;
 
     // convert image to x, y
 
@@ -193,44 +180,6 @@ const App = (props: AppProps) => {
 
     const pixelsPerColumn = dimensionsRef.current.imageWidth / numColumns;
     const pixelsPerRow = dimensionsRef.current.imageHeight / numRows;
-
-    let numWhiteValues = 0;
-    // let maxImageDataProduct = 0;
-    // let pixelsWithMaxProduct = 0;
-    // let redAtMax = 0;
-    // let greenAtMax = 0;
-    // let blueAtMax = 0;
-
-    
-    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
-
-        const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
-        const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
-        const imgData: ImageData = ctx.getImageData(x, y, 1, 1);
-        const red = imgData.data[0];
-        const green = imgData.data[1];
-        const blue = imgData.data[2];
-
-        if (red === whiteValue && green === whiteValue && blue === whiteValue) {
-          numWhiteValues++;
-        }
-
-        // const newImageDataProduct = red * green * blue;
-        // if (newImageDataProduct > maxImageDataProduct) {
-        //   maxImageDataProduct = newImageDataProduct;
-        //   pixelsWithMaxProduct = 1;
-        //   redAtMax = red;
-        //   greenAtMax = green;
-        //   blueAtMax = blue;
-        // } else if (newImageDataProduct === maxImageDataProduct) {
-        //   pixelsWithMaxProduct = pixelsWithMaxProduct++;
-        // }
-      }
-    }
-
-    // console.log('max values: ', maxImageDataProduct, pixelsWithMaxProduct, redAtMax, greenAtMax, blueAtMax);
-    console.log('numWhiteValues: ', numWhiteValues);
 
     const letterAnswerValues: LetterAnswerType[][] = [];
     const lettersAtExactLocation: string[] = ['', '', '', '', ''];
