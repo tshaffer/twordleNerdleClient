@@ -194,10 +194,10 @@ const App = (props: AppProps) => {
       letterAnswerValues.push([]);
       const letterAnswersInRow = letterAnswerValues[rowIndex];
       for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
-        console.log('row: ', rowIndex, 'column: ', columnIndex);
+        // console.log('row: ', rowIndex, 'column: ', columnIndex);
         const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
         const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
-        console.log('x = ', x, ', y = ', y);
+        // console.log('x = ', x, ', y = ', y);
 
         const imgData: ImageData = ctx.getImageData(x, y, 10, 10);
 
@@ -208,7 +208,7 @@ const App = (props: AppProps) => {
         const alpha = imgData.data[i + 3];
 
         const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
-        console.log('red: ', red, 'green: ', green, 'blue: ', blue, 'alpha: ', alpha);
+        // console.log('red: ', red, 'green: ', green, 'blue: ', blue, 'alpha: ', alpha);
 
         letterAnswersInRow.push(letterAnswerType);
 
@@ -233,11 +233,11 @@ const App = (props: AppProps) => {
 
     props.onSetLettersNotInWord(lettersNotInWord);
 
-    console.log('letterAnswerValues');
-    console.log(letterAnswerValues);
-    console.log(lettersAtExactLocation);
-    console.log(lettersNotAtExactLocation);
-    console.log(lettersNotInWord);
+    // console.log('letterAnswerValues');
+    // console.log(letterAnswerValues);
+    // console.log(lettersAtExactLocation);
+    // console.log(lettersNotAtExactLocation);
+    // console.log(lettersNotInWord);
 
     const wordleImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
     console.log(wordleImageData);
@@ -296,10 +296,12 @@ const App = (props: AppProps) => {
       }
     }
 
+    const magicNumber = 400;
+
     for (const key in unknownsByColumnNumber) {
       if (Object.prototype.hasOwnProperty.call(unknownsByColumnNumber, key)) {
         const unknowns = unknownsByColumnNumber[key];
-        if (!isNil(unknowns) && unknowns > 100) {
+        if (!isNil(unknowns) && unknowns > magicNumber) {
           const columnNumber = parseInt(key, 10);
           console.log('convert rows in ', columnNumber, ' to black');
 
@@ -314,13 +316,13 @@ const App = (props: AppProps) => {
       }
     }
     
-    console.log('unknownsByRowNumber', unknownsByRowNumber);
+    // console.log('unknownsByRowNumber', unknownsByRowNumber);
     console.log('unknownsByColumnNumber', unknownsByColumnNumber);
 
     ctx.putImageData(wordleImageData, 0, 0);
 
-    console.log('knowns: ', knowns);
-    console.log('unknowns: ', unknowns);
+    // console.log('knowns: ', knowns);
+    // console.log('unknowns: ', unknowns);
 
     // invert canvas
     // for (let i = 0; i < imgData.length; i += 4) {

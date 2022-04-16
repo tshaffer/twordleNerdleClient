@@ -58,14 +58,14 @@ export const cnListWords = (): any => {
     for (let i = 0; i < 5; i++) {
       candidateLettersAtLocation[i] = [];
 
-      console.log('Candidate letters at location ' + i);
+      // console.log('Candidate letters at location ' + i);
 
       // check to see if there's an exact letter at this location
       if (lettersAtExactLocation[i] !== '') {
 
         candidateLettersAtLocation[i].push(lettersAtExactLocation[i]);
 
-        console.log('Exact letter at location: ' + candidateLettersAtLocation[i]);
+        // console.log('Exact letter at location: ' + candidateLettersAtLocation[i]);
 
       } else {
 
@@ -81,7 +81,7 @@ export const cnListWords = (): any => {
           const letterNotInWord: string = arrayOfLettersNotInWord[j];
           candidateLettersAtThisLocation = candidateLettersAtThisLocation.filter(item => item !== letterNotInWord);
         }
-        console.log(candidateLettersAtThisLocation);
+        // console.log(candidateLettersAtThisLocation);
 
 
         // eliminate lettersNotAtExactLocation
@@ -93,7 +93,7 @@ export const cnListWords = (): any => {
             candidateLettersAtThisLocation = candidateLettersAtThisLocation.filter(item => item !== letterNotAtThisLocation);
           }
         }
-        console.log(candidateLettersAtThisLocation);
+        // console.log(candidateLettersAtThisLocation);
 
         candidateLettersAtLocation[i] = candidateLettersAtThisLocation;
       }
@@ -113,8 +113,8 @@ export const cnListWords = (): any => {
       }
     });
 
-    console.log('lettersSomewhereInWord');
-    console.log(lettersSomewhereInWord);
+    // console.log('lettersSomewhereInWord');
+    // console.log(lettersSomewhereInWord);
 
     const path = serverUrl + apiUrlFragment + 'getWords';
 
