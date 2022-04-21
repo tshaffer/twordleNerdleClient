@@ -44,7 +44,7 @@ export const cnSetLettersNotInWord = (
   };
 };
 
-export const cnListWords = (): any => {
+export const cnListWords = (imageDataBase64: string): any => {
   return (dispatch: any, getState: any) => {
 
     const candidateLettersAtLocation: string[][] = [];
@@ -93,7 +93,7 @@ export const cnListWords = (): any => {
             candidateLettersAtThisLocation = candidateLettersAtThisLocation.filter(item => item !== letterNotAtThisLocation);
           }
         }
-        // console.log(candidateLettersAtThisLocation);
+        console.log(candidateLettersAtThisLocation);
 
         candidateLettersAtLocation[i] = candidateLettersAtThisLocation;
       }
@@ -113,12 +113,13 @@ export const cnListWords = (): any => {
       }
     });
 
-    // console.log('lettersSomewhereInWord');
-    // console.log(lettersSomewhereInWord);
+    console.log('lettersSomewhereInWord');
+    console.log(lettersSomewhereInWord);
 
     const path = serverUrl + apiUrlFragment + 'getWords';
 
     const getWordsRequestBody: any = {
+      imageDataBase64,
       candidateLettersAtLocation,
       lettersSomewhereInWord,
     };
