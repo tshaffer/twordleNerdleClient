@@ -34,12 +34,6 @@ export const NotInWordValue: LetterAnswerValue = {
   blue: 126,
 };
 
-export const NotInWordValueAlternate: LetterAnswerValue = {
-  red: 120,
-  green: 123,
-  blue: 126,
-};
-
 export const WhiteLetterValue: LetterAnswerValue = {
   red: 255,
   green: 255,

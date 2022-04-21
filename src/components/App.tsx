@@ -29,8 +29,7 @@ import {
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
-import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue, NotInWordValueAlternate, WhiteLetterValue } from '../types';
-import _ = require('lodash');
+import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue, WhiteLetterValue } from '../types';
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
@@ -61,14 +60,6 @@ const App = (props: AppProps) => {
 
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
-
-  const positionFromOffset = (offset: number): PixelPosition => {
-    const pixelIndex = Math.trunc(offset / 4);
-    const row = Math.trunc(pixelIndex / wordleCanvas.width);
-    const pixelOffset = offset - (row * wordleCanvas.width * 4);
-    const column = Math.trunc(pixelOffset / 4);
-    return { row, column };
-  };
 
   const offsetFromPosition = (row: number, column: number): number => {
     const offset = (row * wordleCanvas.width * 4) + (column * 4);
@@ -212,14 +203,7 @@ const App = (props: AppProps) => {
 
         const imgData: ImageData = ctx.getImageData(x, y, 10, 10);
 
-        // const i = 0;
-        // const red = imgData.data[i];
-        // const green = imgData.data[i + 1];
-        // const blue = imgData.data[i + 2];
-        // const alpha = imgData.data[i + 3];
-
         const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
-        // console.log('red: ', red, 'green: ', green, 'blue: ', blue, 'alpha: ', alpha);
 
         letterAnswersInRow.push(letterAnswerType);
 
@@ -244,12 +228,6 @@ const App = (props: AppProps) => {
 
     props.onSetLettersNotInWord(lettersNotInWord);
 
-    // console.log('letterAnswerValues');
-    // console.log(letterAnswerValues);
-    // console.log(lettersAtExactLocation);
-    // console.log(lettersNotAtExactLocation);
-    // console.log(lettersNotInWord);
-
     const wordleImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
 
     const imgData = wordleImageData.data;
@@ -270,95 +248,10 @@ const App = (props: AppProps) => {
     // imageDataStr looks like
     //    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA.....
     imageDataBase64 = wordleCanvas.toDataURL();
-    // console.log(imageDataStr);
 
     // imageDataStr can be plugged directly into request.json
   };
 
-
-
-  // console.log(wordleImageData);
-
-  // let unknowns = 0;
-  // let knowns = 0;
-
-  // const unknownsByRowNumber: any = {};
-  // const unknownsByColumnNumber: any = {};
-
-  // const imgData = wordleImageData.data;
-  // for (let i = 0; i < imgData.length; i += 4) {
-  //   const red = imgData[i];
-  //   const green = imgData[i + 1];
-  //   const blue = imgData[i + 2];
-  //   const letterAnswerType: LetterAnswerType = getLetterAnswerTypeRgb(red, green, blue);
-  //   // if (letterAnswerType === LetterAnswerType.Unknown) {
-  //   //   console.log('unknown: ', red, green, blue);
-  //   // }
-  //   if (letterAnswerType !== LetterAnswerType.Unknown) {
-  //     knowns++;
-  //     imgData[i] = 0;
-  //     imgData[i + 1] = 0;
-  //     imgData[i + 2] = 0;
-  //   } else {
-
-  //     unknowns++;
-
-  //     const pixelIndex = Math.trunc(i / 4);
-
-  //     const rowNumber = Math.trunc(pixelIndex / wordleCanvas.width);
-
-  //     const pixelOffset = i - (rowNumber * wordleCanvas.width * 4);
-  //     const columnNumber = Math.trunc(pixelOffset / 4);
-
-  //     const rowKey = rowNumber.toString();
-  //     if (isNil(unknownsByRowNumber[rowKey])) {
-  //       unknownsByRowNumber[rowKey] = 0;
-  //     }
-  //     unknownsByRowNumber[rowKey]++;
-
-  //   if (unknownsByRowNumber[rowKey] === wordleCanvas.width) {
-  //     const rowStartIndex = rowNumber * wordleCanvas.width * 4;
-  //     for (let j = 0; j < (wordleCanvas.width * 4); j += 4) {
-  //       imgData[rowStartIndex + j] = 0;
-  //       imgData[rowStartIndex + j + 1] = 0;
-  //       imgData[rowStartIndex + j + 2] = 0;
-  //     }
-  //   }
-
-  //   const columnKey = columnNumber.toString();
-  //   if (isNil(unknownsByColumnNumber[rowKey])) {
-  //     unknownsByColumnNumber[columnKey] = 0;
-  //   }
-  //   unknownsByColumnNumber[columnKey]++;
-  // }
-  // }
-
-  // const magicNumber = 400;
-
-  // for (const key in unknownsByColumnNumber) {
-  //   if (Object.prototype.hasOwnProperty.call(unknownsByColumnNumber, key)) {
-  //     const unknowns = unknownsByColumnNumber[key];
-  //     if (!isNil(unknowns) && unknowns > magicNumber) {
-  //       const columnNumber = parseInt(key, 10);
-  //       console.log('convert rows in ', columnNumber, ' to black');
-
-  //       // number of rows = wordleCanvas.height
-  //       for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
-  //         const index = (rowIndex * wordleCanvas.width * 4) + (columnNumber * 4);
-  //         imgData[index] = 0;
-  //         imgData[index + 1] = 0;
-  //         imgData[index + 2] = 0;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // console.log('unknownsByRowNumber', unknownsByRowNumber);
-  // console.log('unknownsByColumnNumber', unknownsByColumnNumber);
-
-  // ctx.putImageData(wordleImageData, 0, 0);
-
-  // };
 
   const getLetterAnswerType = (imgData: ImageData): LetterAnswerType => {
     if (isLetterAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
@@ -386,25 +279,26 @@ const App = (props: AppProps) => {
     return LetterAnswerType.Unknown;
   };
 
+  const acceptableColorValueDifference = 2;
+
+  const colorMatch = (actualColor: number, targetColor: number): boolean => {
+    return (Math.abs(actualColor - targetColor) < acceptableColorValueDifference);
+  };
+
   const isLetterAtExactLocation = (red: any, green: any, blue: any): boolean => {
-    return ((red === InWordAtExactLocationValue.red) && (green === InWordAtExactLocationValue.green) && (blue === InWordAtExactLocationValue.blue));
+    return (colorMatch(red, InWordAtExactLocationValue.red) && colorMatch(green, InWordAtExactLocationValue.green) && colorMatch(blue, InWordAtExactLocationValue.blue));
   };
 
   const isLetterNotAtExactLocation = (red: any, green: any, blue: any): boolean => {
-    return ((red === InWordAtNonLocationValue.red) && (green === InWordAtNonLocationValue.green) && (blue === InWordAtNonLocationValue.blue));
+    return (colorMatch(red, InWordAtNonLocationValue.red) && colorMatch(green, InWordAtNonLocationValue.green) && colorMatch(blue, InWordAtNonLocationValue.blue));
   };
 
   const isLetterNotInWord = (red: any, green: any, blue: any): boolean => {
-    let letterNotInWord = ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue));
-    if (letterNotInWord) {
-      return true;
-    }
-    letterNotInWord = ((red === NotInWordValueAlternate.red) && (green === NotInWordValueAlternate.green) && (blue === NotInWordValueAlternate.blue));
-    return letterNotInWord;
+    return (colorMatch(red, NotInWordValue.red) && colorMatch(green, NotInWordValue.green) && colorMatch(blue, NotInWordValue.blue));
   };
 
   const isLetterWhite = (red: any, green: any, blue: any): boolean => {
-    return ((red === WhiteLetterValue.red) && (green === WhiteLetterValue.green) && (blue === WhiteLetterValue.blue));
+    return (colorMatch(red, WhiteLetterValue.red) && colorMatch(green, WhiteLetterValue.green) && colorMatch(blue, WhiteLetterValue.blue));
   };
 
   const updateGuess = (guessIndex: number, guessValue: string) => {
@@ -435,8 +329,6 @@ const App = (props: AppProps) => {
         const img = new Image;
 
         img.onload = function () {
-          // setImageWidth(img.width);
-          // setImageHeight(img.height);
           dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
           console.log('img.width = ', img.width, 'img.height = ', img.height);
           console.log('dimensionsRef: ', dimensionsRef.current);
@@ -465,8 +357,6 @@ const App = (props: AppProps) => {
       img.onload = function () {
 
         // Update dimensions of the canvas with the dimensions of the image
-        // wordleCanvas.width = props.imageWidth;
-        // wordleCanvas.height = props.imageHeight;
         wordleCanvas.width = dimensionsRef.current.imageWidth;
         wordleCanvas.height = dimensionsRef.current.imageHeight;
 
