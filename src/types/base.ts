@@ -1,5 +1,5 @@
-// export const serverUrl = 'http://localhost:8000';
-export const serverUrl = 'https://tswordle.herokuapp.com';
+export const serverUrl = 'http://localhost:8000';
+// export const serverUrl = 'https://tswordle.herokuapp.com';
 
 export const apiUrlFragment = '/api/v1/';
 
@@ -32,6 +32,18 @@ export const NotInWordValue: LetterAnswerValue = {
   red: 120,
   green: 124,
   blue: 126,
+};
+
+export const NotInWordValueAlternate: LetterAnswerValue = {
+  red: 120,
+  green: 123,
+  blue: 126,
+};
+
+export const WhiteLetterValue: LetterAnswerValue = {
+  red: 255,
+  green: 255,
+  blue: 255,
 };
 
 export const InWordAtNonLocationValue: LetterAnswerValue = {

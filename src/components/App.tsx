@@ -27,9 +27,9 @@ import {
   getGuesses,
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
-import { isNil, isUndefined } from 'lodash';
+import { isNil } from 'lodash';
 import { SyntheticEvent } from 'react';
-import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue } from '../types';
+import { InWordAtExactLocationValue, InWordAtNonLocationValue, LetterAnswerType, NotInWordValue, NotInWordValueAlternate, WhiteLetterValue } from '../types';
 import _ = require('lodash');
 
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
@@ -44,7 +44,7 @@ export interface AppProps {
   onSetLetterAtLocation: (index: number, letterAtLocation: string,) => any;
   onSetLettersNotAtLocation: (index: number, lettersNotAtLocation: string) => any;
   onSetLettersNotInWord: (lettersNotInWord: string) => any;
-  onListWords: () => any;
+  onListWords: (imageDataBase64: string) => any;
 }
 
 interface PixelPosition {
@@ -55,6 +55,7 @@ interface PixelPosition {
 const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
+  let imageDataBase64: string;
 
   const dimensionsRef = React.useRef({ imageWidth: -1, imageHeight: -1 });
 
@@ -266,8 +267,10 @@ const App = (props: AppProps) => {
 
     ctx.putImageData(wordleImageData, 0, 0);
 
-    const imageDataStr: string = wordleCanvas.toDataURL();
-    console.log(imageDataStr);
+    // imageDataStr looks like
+    //    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA.....
+    imageDataBase64 = wordleCanvas.toDataURL();
+    // console.log(imageDataStr);
 
     // imageDataStr can be plugged directly into request.json
   };
@@ -364,6 +367,8 @@ const App = (props: AppProps) => {
       return LetterAnswerType.InWordAtNonLocation;
     } else if (isLetterNotInWord(imgData.data[0], imgData.data[1], imgData.data[2])) {
       return LetterAnswerType.NotInWord;
+    } else if (!isLetterWhite(imgData.data[0], imgData.data[1], imgData.data[2])) {
+      console.log('letter unknown but not white: ', imgData.data[0], imgData.data[1], imgData.data[2]);
     }
     return LetterAnswerType.Unknown;
   };
@@ -375,6 +380,8 @@ const App = (props: AppProps) => {
       return LetterAnswerType.InWordAtNonLocation;
     } else if (isLetterNotInWord(red, green, blue)) {
       return LetterAnswerType.NotInWord;
+    } else if (!isLetterWhite(red, green, blue)) {
+      console.log('letter unknown but not white: ', red, green, blue);
     }
     return LetterAnswerType.Unknown;
   };
@@ -388,13 +395,21 @@ const App = (props: AppProps) => {
   };
 
   const isLetterNotInWord = (red: any, green: any, blue: any): boolean => {
-    return ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue));
+    let letterNotInWord = ((red === NotInWordValue.red) && (green === NotInWordValue.green) && (blue === NotInWordValue.blue));
+    if (letterNotInWord) {
+      return true;
+    }
+    letterNotInWord = ((red === NotInWordValueAlternate.red) && (green === NotInWordValueAlternate.green) && (blue === NotInWordValueAlternate.blue));
+    return letterNotInWord;
+  };
+
+  const isLetterWhite = (red: any, green: any, blue: any): boolean => {
+    return ((red === WhiteLetterValue.red) && (green === WhiteLetterValue.green) && (blue === WhiteLetterValue.blue));
   };
 
   const updateGuess = (guessIndex: number, guessValue: string) => {
     props.onUpdateGuess(guessIndex, guessValue);
   };
-
 
   // invoked on paste event
   const retrieveImageFromClipboardAsBlob = (pasteEvent) => {
@@ -477,7 +492,7 @@ const App = (props: AppProps) => {
     if (isNil(props.inputError)) {
       processImageData();
       setListWordsInvoked(true);
-      props.onListWords();
+      props.onListWords(imageDataBase64);
     } else {
       console.log('Error: ' + props.inputError);
       setErrorDialogOpen(true);
