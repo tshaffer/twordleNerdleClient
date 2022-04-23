@@ -101,12 +101,6 @@ const App = (props: AppProps) => {
       }
     }
 
-    console.log('whiteCount');
-    console.log(whiteCount);
-
-    console.log('whiteAtImageDataRGBIndex');
-    console.log(whiteAtImageDataRGBIndex);
-
     const pixelOffsetFromEdge = 10;
 
     // find all white rows
@@ -122,10 +116,7 @@ const App = (props: AppProps) => {
         }
       }
       if (allPixelsInRowAreWhite) {
-        console.log('allPixelsInRowAreWhite', rowIndex);
         whiteRows.push(rowIndex);
-
-        // 
       }
     }
 
@@ -138,11 +129,10 @@ const App = (props: AppProps) => {
         const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
         if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
           allPixelsInColumnAreWhite = false;
-          // break here if the code just breaks the inner loop
+          // TEDTODO - break here
         }
       }
       if (allPixelsInColumnAreWhite) {
-        console.log('allPixelsInColumnAreWhite', columnIndex);
         whiteColumns.push(columnIndex);
       }
     }
@@ -253,6 +243,115 @@ const App = (props: AppProps) => {
   };
 
 
+  const getWords = () => {
+
+    wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
+
+    console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
+
+    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
+    const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
+    const imageDataRGB: Uint8ClampedArray = allImageData.data;
+
+    const pixelOffsetFromEdge = 10;
+    const whiteValue = 255;
+
+    // whiteAtImageDataRGBIndex
+    //    length is canvas width * canvas height
+    //    that is, there's one entry in this array for each set of image pixels (4 bytes) in imageDataRGB
+    //    index into this array for a given rowIndex, columnIndex is therefore
+    //        (rowIndex * canvasWidth) + columnIndex
+
+    const whiteAtImageDataRGBIndex: boolean[] = [];
+
+    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
+      const red = imageDataRGB[imageDataIndex];
+      const green = imageDataRGB[imageDataIndex + 1];
+      const blue = imageDataRGB[imageDataIndex + 2];
+      if (red === whiteValue && green == whiteValue && blue === whiteValue) {
+        whiteAtImageDataRGBIndex.push(true);
+      } else {
+        whiteAtImageDataRGBIndex.push(false);
+      }
+    }
+
+    // find all white rows
+    const whiteRows: number[] = [];
+    for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
+      let allPixelsInRowAreWhite = true;
+      for (let columnIndex = pixelOffsetFromEdge; columnIndex < (wordleCanvas.width - (pixelOffsetFromEdge * 2)); columnIndex++) {
+        // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
+        const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
+        if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
+          allPixelsInRowAreWhite = false;
+          // break here if the code just breaks the inner loop
+        }
+      }
+      if (allPixelsInRowAreWhite) {
+        whiteRows.push(rowIndex);
+      }
+    }
+
+    // find all white columns
+    const whiteColumns: number[] = [];
+    for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
+      let allPixelsInColumnAreWhite = true;
+      for (let rowIndex = pixelOffsetFromEdge; rowIndex < (wordleCanvas.height - (pixelOffsetFromEdge * 2)); rowIndex++) {
+        // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
+        const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
+        if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
+          allPixelsInColumnAreWhite = false;
+          // break here if the code just breaks the inner loop
+        }
+      }
+      if (allPixelsInColumnAreWhite) {
+        whiteColumns.push(columnIndex);
+      }
+    }
+
+    // convert pixels to black in the white rows
+    for (let rowIndex = 0; rowIndex < whiteRows.length; rowIndex++) {
+      const whiteRowIndex = whiteRows[rowIndex];
+      const rowStartIndex = whiteRowIndex * wordleCanvas.width * 4;
+      for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
+        const columnOffset = columnIndex * 4;
+        imageDataRGB[rowStartIndex + columnOffset] = 0;
+        imageDataRGB[rowStartIndex + columnOffset + 1] = 0;
+        imageDataRGB[rowStartIndex + columnOffset + 2] = 0;
+      }
+    }
+
+    // convert pixels to black in the white columns
+    for (let indexIntoWhiteColumns = 0; indexIntoWhiteColumns < whiteColumns.length; indexIntoWhiteColumns++) {
+      const whiteColumnIndex = whiteColumns[indexIntoWhiteColumns];
+      // const columnStartIndex = whiteColumnIndex * wordleCanvas.height * 4;
+      for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
+        const offset = offsetFromPosition(rowIndex, whiteColumnIndex);
+        // const columnOffset = columnIndex * 4;
+        imageDataRGB[offset] = 0;
+        imageDataRGB[offset + 1] = 0;
+        imageDataRGB[offset + 2] = 0;
+      }
+    }
+
+    ctx.putImageData(allImageData, 0, 0);
+
+    for (let i = 0; i < imageDataRGB.length; i += 4) {
+      const red = imageDataRGB[i];
+      const green = imageDataRGB[i + 1];
+      const blue = imageDataRGB[i + 2];
+      const letterAnswerType: LetterAnswerType = getLetterAnswerTypeRgb(red, green, blue);
+      if (letterAnswerType !== LetterAnswerType.Unknown) {
+        imageDataRGB[i] = 0;
+        imageDataRGB[i + 1] = 0;
+        imageDataRGB[i + 2] = 0;
+      }
+    }
+
+    ctx.putImageData(allImageData, 0, 0);
+
+  };
+
   const getLetterAnswerType = (imgData: ImageData): LetterAnswerType => {
     if (isLetterAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
       return LetterAnswerType.InWordAtExactLocation;
@@ -260,8 +359,8 @@ const App = (props: AppProps) => {
       return LetterAnswerType.InWordAtNonLocation;
     } else if (isLetterNotInWord(imgData.data[0], imgData.data[1], imgData.data[2])) {
       return LetterAnswerType.NotInWord;
-    } else if (!isLetterWhite(imgData.data[0], imgData.data[1], imgData.data[2])) {
-      console.log('letter unknown but not white: ', imgData.data[0], imgData.data[1], imgData.data[2]);
+      // } else if (!isLetterWhite(imgData.data[0], imgData.data[1], imgData.data[2])) {
+      //   console.log('letter unknown but not white: ', imgData.data[0], imgData.data[1], imgData.data[2]);
     }
     return LetterAnswerType.Unknown;
   };
@@ -273,8 +372,8 @@ const App = (props: AppProps) => {
       return LetterAnswerType.InWordAtNonLocation;
     } else if (isLetterNotInWord(red, green, blue)) {
       return LetterAnswerType.NotInWord;
-    } else if (!isLetterWhite(red, green, blue)) {
-      console.log('letter unknown but not white: ', red, green, blue);
+      // } else if (!isLetterWhite(red, green, blue)) {
+      //   console.log('letter unknown but not white: ', red, green, blue);
     }
     return LetterAnswerType.Unknown;
   };
@@ -380,9 +479,11 @@ const App = (props: AppProps) => {
 
   const handleListWords = () => {
     if (isNil(props.inputError)) {
-      processImageData();
-      setListWordsInvoked(true);
-      props.onListWords(imageDataBase64);
+      getWords();
+      // processImageData();
+
+      // setListWordsInvoked(true);
+      // props.onListWords(imageDataBase64);
     } else {
       console.log('Error: ' + props.inputError);
       setErrorDialogOpen(true);
