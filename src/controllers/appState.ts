@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { TedState } from '../types';
-import { setPossibleWords, setLetterAtLocation, setLettersNotAtLocation, setLettersNotInWord, addGuess, updateGuess } from '../models';
+import { setPossibleWords, setLetterAtLocation, setLettersNotAtLocation, setLettersNotInWord, addGuess, updateGuess, setGuesses } from '../models';
 import { getLettersAtExactLocation, getLettersNotAtExactLocation, getLettersNotInWord, getGuesses } from '../selectors';
 
 import { apiUrlFragment, serverUrl } from '../index';
@@ -44,7 +44,51 @@ export const cnSetLettersNotInWord = (
   };
 };
 
+export const cnGetGuesses = (imageDataBase64: string): any => {
+  return (dispatch: any, getState: any) => {
+    const path = serverUrl + apiUrlFragment + 'getGuesses';
+    const getWordsRequestBody: any = {
+      imageDataBase64,
+    };
+    return axios.post(
+      path,
+      getWordsRequestBody,
+    ).then((response) => {
+      console.log(response);
+      const guesses: string[] = response.data.guesses;
+      dispatch(setGuesses(guesses));
+    }).catch((error) => {
+      console.log('error');
+      console.log(error);
+    });
+  };
+};
+
 export const cnListWords = (imageDataBase64: string): any => {
+  return (dispatch: any, getState: any) => {
+    const path = serverUrl + apiUrlFragment + 'getGuesses';
+    const getWordsRequestBody: any = {
+      imageDataBase64,
+    };
+    return axios.post(
+      path,
+      getWordsRequestBody,
+    ).then((response) => {
+      console.log(response);
+      // dispatch(setPossibleWords(response.data.words));
+      const guesses: string[] = response.data.guesses;
+      guesses.forEach((guess, index) => {
+        // dispatch(addGuess());
+        dispatch(updateGuess(index, guess));
+      })
+    }).catch((error) => {
+      console.log('error');
+      console.log(error);
+    });
+  };
+};
+
+export const cnListWordsOld = (imageDataBase64: string): any => {
   return (dispatch: any, getState: any) => {
 
     const candidateLettersAtLocation: string[][] = [];

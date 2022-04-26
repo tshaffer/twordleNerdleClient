@@ -14,6 +14,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 import {
   cnAddGuess,
+  cnGetGuesses,
   cnUpdateGuess,
   cnListWords,
   cnSetLetterAtLocation,
@@ -37,6 +38,7 @@ interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
 export interface AppProps {
   guesses: string[];
   onAddGuess: () => any;
+  onGetGuesses: (imageDataBase64: string) => any;
   onUpdateGuess: (guessIndex: number, guess: string) => any;
   possibleWords: string[];
   inputError: string | null;
@@ -243,7 +245,7 @@ const App = (props: AppProps) => {
   };
 
 
-  const getWords = () => {
+  const getGuesses = () => {
 
     wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
 
@@ -350,6 +352,9 @@ const App = (props: AppProps) => {
 
     ctx.putImageData(allImageData, 0, 0);
 
+    // imageDataStr looks like
+    //    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA.....
+    imageDataBase64 = wordleCanvas.toDataURL();
   };
 
   const getLetterAnswerType = (imgData: ImageData): LetterAnswerType => {
@@ -477,13 +482,16 @@ const App = (props: AppProps) => {
     props.onAddGuess();
   };
 
+  const handleGetGuesses = () => {
+    getGuesses();
+    props.onGetGuesses(imageDataBase64);
+  };
+
   const handleListWords = () => {
     if (isNil(props.inputError)) {
-      getWords();
-      // processImageData();
-
-      // setListWordsInvoked(true);
-      // props.onListWords(imageDataBase64);
+      processImageData();
+      setListWordsInvoked(true);
+      props.onListWords(imageDataBase64);
     } else {
       console.log('Error: ' + props.inputError);
       setErrorDialogOpen(true);
@@ -604,17 +612,6 @@ const App = (props: AppProps) => {
         noValidate
         autoComplete='off'
       >
-        Guesses
-        <br />
-        {guesses}
-        <br />
-        <Button
-          variant='contained'
-          onClick={handleAddGuess}
-        >
-          Add Guess
-        </Button>
-        <br />
         <input
           value='Paste here'
           onPaste={handleClipboardEvent}
@@ -626,6 +623,18 @@ const App = (props: AppProps) => {
           id='mycanvas'
         >
         </canvas>
+        <br />
+        <Button
+          variant='contained'
+          onClick={handleGetGuesses}
+        >
+        Get Guesses
+        </Button>
+        <br />
+        Guesses
+        <br />
+        {guesses}
+        <br />
         <br />
         <Button
           variant='contained'
@@ -650,6 +659,7 @@ function mapStateToProps(state: any) {
 
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
+    onGetGuesses: cnGetGuesses,
     onAddGuess: cnAddGuess,
     onUpdateGuess: cnUpdateGuess,
     onSetLetterAtLocation: cnSetLetterAtLocation,

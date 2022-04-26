@@ -6,6 +6,7 @@ import { TedModelBaseAction } from './baseAction';
 // ------------------------------------
 // Constants
 // ------------------------------------
+const SET_GUESSES = 'SET_GUESSES';
 const ADD_GUESS = 'ADD_GUESS';
 const UPDATE_GUESS = 'UPDATE_GUESS';
 const SET_LETTER_AT_LOCATION = 'SET_LETTER_AT_LOCATION';
@@ -16,6 +17,21 @@ const SET_POSSIBLE_WORDS = 'SET_POSSIBLE_WORDS';
 // ------------------------------------
 // Actions
 // ------------------------------------
+
+export interface SetGuesses {
+  guesses: string[],
+}
+
+export const setGuesses = (
+  guesses: string[],
+): any => {
+  return {
+    type: SET_GUESSES,
+    payload: {
+      guesses
+    }
+  };
+};
 
 export const addGuess = (
 ): any => {
@@ -114,7 +130,7 @@ export const setPossibleWords = (
 // ------------------------------------
 
 const initialState: AppState = {
-  guesses: ['arise', 'mount'],
+  guesses: [],
   lettersAtExactLocation: ['', '', '', '', ''],
   lettersNotAtExactLocation: ['', '', '', '', ''],
   lettersNotInWord: '',
@@ -123,9 +139,12 @@ const initialState: AppState = {
 
 export const appStateReducer = (
   state: AppState = initialState,
-  action: TedModelBaseAction<UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
+  action: TedModelBaseAction<SetGuesses & UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
 ): AppState => {
   switch (action.type) {
+    case SET_GUESSES: {
+      return { ...state, guesses: action.payload.guesses };
+    }
     case ADD_GUESS: {
       const newState = cloneDeep(state);
       newState.guesses.push('');
