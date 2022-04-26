@@ -13,7 +13,6 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import {
-  cnAddGuess,
   cnGetGuesses,
   cnUpdateGuess,
   cnListWords,
@@ -37,7 +36,6 @@ interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
 }
 export interface AppProps {
   guesses: string[];
-  onAddGuess: () => any;
   onGetGuesses: (imageDataBase64: string) => any;
   onUpdateGuess: (guessIndex: number, guess: string) => any;
   possibleWords: string[];
@@ -478,10 +476,6 @@ const App = (props: AppProps) => {
     }
   };
 
-  const handleAddGuess = () => {
-    props.onAddGuess();
-  };
-
   const handleGetGuesses = () => {
     getGuesses();
     props.onGetGuesses(imageDataBase64);
@@ -660,7 +654,6 @@ function mapStateToProps(state: any) {
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
     onGetGuesses: cnGetGuesses,
-    onAddGuess: cnAddGuess,
     onUpdateGuess: cnUpdateGuess,
     onSetLetterAtLocation: cnSetLetterAtLocation,
     onSetLettersNotAtLocation: cnSetLettersNotAtLocation,

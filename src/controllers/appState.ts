@@ -64,31 +64,7 @@ export const cnGetGuesses = (imageDataBase64: string): any => {
   };
 };
 
-export const cnListWords = (imageDataBase64: string): any => {
-  return (dispatch: any, getState: any) => {
-    const path = serverUrl + apiUrlFragment + 'getGuesses';
-    const getWordsRequestBody: any = {
-      imageDataBase64,
-    };
-    return axios.post(
-      path,
-      getWordsRequestBody,
-    ).then((response) => {
-      console.log(response);
-      // dispatch(setPossibleWords(response.data.words));
-      const guesses: string[] = response.data.guesses;
-      guesses.forEach((guess, index) => {
-        // dispatch(addGuess());
-        dispatch(updateGuess(index, guess));
-      })
-    }).catch((error) => {
-      console.log('error');
-      console.log(error);
-    });
-  };
-};
-
-export const cnListWordsOld = (imageDataBase64: string): any => {
+export const cnListWords = (): any => {
   return (dispatch: any, getState: any) => {
 
     const candidateLettersAtLocation: string[][] = [];
@@ -163,7 +139,6 @@ export const cnListWordsOld = (imageDataBase64: string): any => {
     const path = serverUrl + apiUrlFragment + 'getWords';
 
     const getWordsRequestBody: any = {
-      imageDataBase64,
       candidateLettersAtLocation,
       lettersSomewhereInWord,
     };
