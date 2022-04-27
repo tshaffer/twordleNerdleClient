@@ -55,6 +55,7 @@ const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
   let imageDataBase64: string;
+  let pastedBlob: any;
 
   const dimensionsRef = React.useRef({ imageWidth: -1, imageHeight: -1 });
 
@@ -426,6 +427,8 @@ const App = (props: AppProps) => {
       // Retrieve image on clipboard as blob
       const blob = items[i].getAsFile();
 
+      pastedBlob = blob;
+
       processPastedBlob(blob);
     }
   };
@@ -483,6 +486,7 @@ const App = (props: AppProps) => {
   const handleGetGuesses = () => {
     getGuesses();
     props.onGetGuesses(imageDataBase64);
+    processPastedBlob(pastedBlob);
   };
 
   const handleListWords = () => {
