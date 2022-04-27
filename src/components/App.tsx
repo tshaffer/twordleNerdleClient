@@ -426,23 +426,27 @@ const App = (props: AppProps) => {
       // Retrieve image on clipboard as blob
       const blob = items[i].getAsFile();
 
-      const fr = new FileReader();
-      fr.onload = function () { // file is loaded
-        const img = new Image;
+      processPastedBlob(blob);
+    }
+  };
 
-        img.onload = function () {
-          dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
-          console.log('img.width = ', img.width, 'img.height = ', img.height);
-          console.log('dimensionsRef: ', dimensionsRef.current);
+  const processPastedBlob = (blob: any) => {
+    const fr = new FileReader();
+    fr.onload = function () { // file is loaded
+      const img = new Image;
 
-          processImageBlob(blob);
-        };
+      img.onload = function () {
+        dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
+        console.log('img.width = ', img.width, 'img.height = ', img.height);
+        console.log('dimensionsRef: ', dimensionsRef.current);
 
-        img.src = fr.result as any; // is the data URL because called with readAsDataURL
+        processImageBlob(blob);
       };
 
-      fr.readAsDataURL(blob);
-    }
+      img.src = fr.result as any; // is the data URL because called with readAsDataURL
+    };
+
+    fr.readAsDataURL(blob);
   };
 
   // invoked after pasted image data is loaded
