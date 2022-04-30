@@ -488,8 +488,7 @@ const App = (props: AppProps) => {
     props.onGetGuesses(imageDataBase64);
     setTimeout(function () {
       processPastedBlob(pastedBlob);
-    }, 2000);
-    // processPastedBlob(pastedBlob);
+    }, 500);
   };
 
   const handleListWords = () => {
@@ -509,10 +508,6 @@ const App = (props: AppProps) => {
 
   const handleClipboardEvent = (e: ClipboardEvent<HTMLInputElement>) => {
     retrieveImageFromClipboardAsBlob(e);
-  };
-
-  const handleInputChanged = (event: any) => {
-    console.log('handleInputChanged invoked');
   };
 
   const renderGuess = (guess: string, guessIndex: number) => {
@@ -587,7 +582,9 @@ const App = (props: AppProps) => {
   const wordListElement = renderWordListElement();
 
   return (
-    <div>
+    <div
+      onPaste={handleClipboardEvent}
+    >
       <Dialog
         open={errorDialogOpen}
         onClose={handleCloseErrorDialog}
@@ -617,11 +614,6 @@ const App = (props: AppProps) => {
         noValidate
         autoComplete='off'
       >
-        <input
-          value='Paste here'
-          onPaste={handleClipboardEvent}
-          onChange={handleInputChanged}
-        />
         <br />
         <canvas
           style={{ border: '1px solid grey' }}
@@ -635,8 +627,6 @@ const App = (props: AppProps) => {
         >
           Get Guesses
         </Button>
-        <br />
-        Guesses
         <br />
         {guesses}
         <br />
