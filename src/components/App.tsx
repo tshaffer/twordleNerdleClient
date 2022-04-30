@@ -28,7 +28,6 @@ import {
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
-import { SyntheticEvent } from 'react';
 import { LetterAnswerType } from '../types';
 import {
   buildWhiteAtImageDataRGBIndex,
@@ -40,6 +39,7 @@ import {
   convertBackgroundColorsToBlack,
 } from '../utilities';
 
+import { SyntheticEvent } from 'react';
 interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
   clipboardData: DataTransfer;
 }
