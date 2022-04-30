@@ -157,6 +157,65 @@ const App = (props: AppProps) => {
     }
   };
 
+  const getLettersNotInWord = (ctx: CanvasRenderingContext2D, guesses: string[], numRows: number, numColumns: number, pixelsPerColumn: number, pixelsPerRow: number): string => {
+
+    let lettersNotInWord: string = '';
+
+    const letterAnswerValues: LetterAnswerType[][] = [];
+    const lettersAtExactLocation: string[] = ['', '', '', '', ''];
+    const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
+
+    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+      letterAnswerValues.push([]);
+      const letterAnswersInRow = letterAnswerValues[rowIndex];
+      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+        // console.log('row: ', rowIndex, 'column: ', columnIndex);
+        const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
+        const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
+        // console.log('x = ', x, ', y = ', y);
+
+        const imgData: ImageData = ctx.getImageData(x, y, 10, 10);
+
+        const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
+
+        letterAnswersInRow.push(letterAnswerType);
+
+        const currentCharacter: string = guesses[rowIndex].charAt(columnIndex);
+
+        switch (letterAnswerType) {
+          case LetterAnswerType.InWordAtExactLocation:
+            lettersAtExactLocation[columnIndex] = currentCharacter;
+            props.onSetLetterAtLocation(columnIndex, currentCharacter);
+            break;
+          case LetterAnswerType.InWordAtNonLocation:
+            lettersNotAtExactLocation[columnIndex] = lettersNotAtExactLocation[columnIndex] + currentCharacter;
+            props.onSetLettersNotAtLocation(columnIndex, lettersNotAtExactLocation[columnIndex]);
+            break;
+          case LetterAnswerType.NotInWord:
+          default:
+            lettersNotInWord = lettersNotInWord + currentCharacter;
+            break;
+        }
+      }
+    }
+
+    return lettersNotInWord;
+  };
+  
+  const convertBackgroundColorsToBlack = (imgData: Uint8ClampedArray) => {
+    for (let i = 0; i < imgData.length; i += 4) {
+      const red = imgData[i];
+      const green = imgData[i + 1];
+      const blue = imgData[i + 2];
+      const letterAnswerType: LetterAnswerType = getLetterAnswerTypeRgb(red, green, blue);
+      if (letterAnswerType !== LetterAnswerType.Unknown) {
+        imgData[i] = 0;
+        imgData[i + 1] = 0;
+        imgData[i + 2] = 0;
+      }
+    }
+  };
+
   // invoked when the user clicks on List Words
   const processImageData = () => {
 
@@ -198,61 +257,12 @@ const App = (props: AppProps) => {
     const pixelsPerColumn = dimensionsRef.current.imageWidth / numColumns;
     const pixelsPerRow = dimensionsRef.current.imageHeight / numRows;
 
-    const letterAnswerValues: LetterAnswerType[][] = [];
-    const lettersAtExactLocation: string[] = ['', '', '', '', ''];
-    const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
-    let lettersNotInWord: string = '';
-
-    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-      letterAnswerValues.push([]);
-      const letterAnswersInRow = letterAnswerValues[rowIndex];
-      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
-        // console.log('row: ', rowIndex, 'column: ', columnIndex);
-        const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
-        const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
-        // console.log('x = ', x, ', y = ', y);
-
-        const imgData: ImageData = ctx.getImageData(x, y, 10, 10);
-
-        const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
-
-        letterAnswersInRow.push(letterAnswerType);
-
-        const currentCharacter: string = enteredWords[rowIndex].charAt(columnIndex);
-
-        switch (letterAnswerType) {
-          case LetterAnswerType.InWordAtExactLocation:
-            lettersAtExactLocation[columnIndex] = currentCharacter;
-            props.onSetLetterAtLocation(columnIndex, currentCharacter);
-            break;
-          case LetterAnswerType.InWordAtNonLocation:
-            lettersNotAtExactLocation[columnIndex] = lettersNotAtExactLocation[columnIndex] + currentCharacter;
-            props.onSetLettersNotAtLocation(columnIndex, lettersNotAtExactLocation[columnIndex]);
-            break;
-          case LetterAnswerType.NotInWord:
-          default:
-            lettersNotInWord = lettersNotInWord + currentCharacter;
-            break;
-        }
-      }
-    }
-
+    const lettersNotInWord = getLettersNotInWord(ctx, enteredWords, numRows, numColumns, pixelsPerRow, pixelsPerColumn);
     props.onSetLettersNotInWord(lettersNotInWord);
 
     const wordleImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
 
-    const imgData = wordleImageData.data;
-    for (let i = 0; i < imgData.length; i += 4) {
-      const red = imgData[i];
-      const green = imgData[i + 1];
-      const blue = imgData[i + 2];
-      const letterAnswerType: LetterAnswerType = getLetterAnswerTypeRgb(red, green, blue);
-      if (letterAnswerType !== LetterAnswerType.Unknown) {
-        imgData[i] = 0;
-        imgData[i + 1] = 0;
-        imgData[i + 2] = 0;
-      }
-    }
+    convertBackgroundColorsToBlack(wordleImageData.data);
 
     ctx.putImageData(wordleImageData, 0, 0);
 
