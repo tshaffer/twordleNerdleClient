@@ -91,7 +91,8 @@ export const cnListWords = (): any => {
 
         // initialize to include all characters
         for (let j = 0; j < 26; j++) {
-          candidateLettersAtLocation[i].push(String.fromCharCode(j + 97));
+          // candidateLettersAtLocation[i].push(String.fromCharCode(j + 97));
+          candidateLettersAtLocation[i].push(String.fromCharCode(j + 65));
         }
 
         let candidateLettersAtThisLocation: string[] = candidateLettersAtLocation[i];
@@ -126,7 +127,7 @@ export const cnListWords = (): any => {
         if (!isNil(lettersNotAtThisLocationArray)) {
           lettersNotAtThisLocationArray.forEach((letterNotAtThisLocation: string) => {
             if (lettersSomewhereInWord.indexOf(letterNotAtThisLocation)) {
-              lettersSomewhereInWord.push(letterNotAtThisLocation)
+              lettersSomewhereInWord.push(letterNotAtThisLocation);
             }
           });
         }
