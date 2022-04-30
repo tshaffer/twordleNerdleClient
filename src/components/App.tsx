@@ -19,6 +19,7 @@ import {
   cnSetLetterAtLocation,
   cnSetLettersNotAtLocation,
   cnSetLettersNotInWord,
+  cnUploadFile,
 } from '../controllers';
 
 import {
@@ -53,6 +54,7 @@ export interface AppProps {
   onSetLettersNotAtLocation: (index: number, lettersNotAtLocation: string) => any;
   onSetLettersNotInWord: (lettersNotInWord: string) => any;
   onListWords: (imageDataBase64: string) => any;
+  onUploadFile: (formData: FormData) => any;
 }
 
 const App = (props: AppProps) => {
@@ -63,6 +65,7 @@ const App = (props: AppProps) => {
 
   const dimensionsRef = React.useRef({ imageWidth: -1, imageHeight: -1 });
 
+  const [selectedFile, setSelectedFile] = React.useState(null);
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
 
@@ -275,6 +278,17 @@ const App = (props: AppProps) => {
     }
   };
 
+  const handleFileChangeHandler = (e: any) => {
+    setSelectedFile(e.target.files[0]);
+  };
+
+  const handleUploadFile = () => {
+    console.log('uploadFile: ', selectedFile);
+    const data = new FormData();
+    data.append('file', selectedFile);
+    props.onUploadFile(data);
+  };
+
   const handleGetGuesses = () => {
     getGuesses();
     props.onGetGuesses(imageDataBase64);
@@ -409,6 +423,9 @@ const App = (props: AppProps) => {
         noValidate
         autoComplete='off'
       >
+        <input type="file" name="file" onChange={handleFileChangeHandler}/>
+        <br />
+        <button type="button" onClick={handleUploadFile}>Upload</button> 
         <br />
         <canvas
           style={{ border: '1px solid grey' }}
@@ -455,6 +472,7 @@ const mapDispatchToProps = (dispatch: any) => {
     onSetLettersNotAtLocation: cnSetLettersNotAtLocation,
     onSetLettersNotInWord: cnSetLettersNotInWord,
     onListWords: cnListWords,
+    onUploadFile: cnUploadFile,
   }, dispatch);
 };
 
