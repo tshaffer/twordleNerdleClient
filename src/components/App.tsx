@@ -89,7 +89,7 @@ const App = (props: AppProps) => {
     return whiteAtImageDataRGBIndex;
   };
 
-  const buildWhiteRows = (whiteAtImageDataRGBIndex: boolean[]): number[] => {
+  const getWhiteRows = (whiteAtImageDataRGBIndex: boolean[]): number[] => {
 
     const whiteRows: number[] = [];
 
@@ -111,7 +111,7 @@ const App = (props: AppProps) => {
     return whiteRows;
   };
 
-  const buildWhiteColumns = (whiteAtImageDataRGBIndex: boolean[]): number[] => {
+  const getWhiteColumns = (whiteAtImageDataRGBIndex: boolean[]): number[] => {
     const whiteColumns: number[] = [];
     for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
       let allPixelsInColumnAreWhite = true;
@@ -230,16 +230,12 @@ const App = (props: AppProps) => {
 
     const whiteAtImageDataRGBIndex: boolean[] = buildWhiteAtImageDataRGBIndex(imageDataRGB);
 
-    // find all white rows
-    const whiteRows: number[] = buildWhiteRows(whiteAtImageDataRGBIndex);
+    const whiteRows: number[] = getWhiteRows(whiteAtImageDataRGBIndex);
 
-    // find all white columns
-    const whiteColumns: number[] = buildWhiteColumns(whiteAtImageDataRGBIndex);
+    const whiteColumns: number[] = getWhiteColumns(whiteAtImageDataRGBIndex);
 
-    // convert pixels to black in the white rows
     convertWhiteRowsToBlack(whiteRows, imageDataRGB);
 
-    // convert pixels to black in the white columns
     convertWhiteColumnsToBlack(whiteColumns, imageDataRGB);
 
     ctx.putImageData(allImageData, 0, 0);
@@ -284,105 +280,25 @@ const App = (props: AppProps) => {
     const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
     const imageDataRGB: Uint8ClampedArray = allImageData.data;
 
+    const whiteAtImageDataRGBIndex: boolean[] = buildWhiteAtImageDataRGBIndex(imageDataRGB);
+
     const pixelOffsetFromEdge = 10;
     const whiteValue = 255;
 
-    // whiteAtImageDataRGBIndex
-    //    length is canvas width * canvas height
-    //    that is, there's one entry in this array for each set of image pixels (4 bytes) in imageDataRGB
-    //    index into this array for a given rowIndex, columnIndex is therefore
-    //        (rowIndex * canvasWidth) + columnIndex
+    const whiteRows: number[] = getWhiteRows(whiteAtImageDataRGBIndex);
 
-    const whiteAtImageDataRGBIndex: boolean[] = [];
+    const whiteColumns: number[] = getWhiteColumns(whiteAtImageDataRGBIndex);
 
-    for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
-      const red = imageDataRGB[imageDataIndex];
-      const green = imageDataRGB[imageDataIndex + 1];
-      const blue = imageDataRGB[imageDataIndex + 2];
-      if (red === whiteValue && green == whiteValue && blue === whiteValue) {
-        whiteAtImageDataRGBIndex.push(true);
-      } else {
-        whiteAtImageDataRGBIndex.push(false);
-      }
-    }
+    convertWhiteRowsToBlack(whiteRows, imageDataRGB);
 
-    // find all white rows
-    const whiteRows: number[] = [];
-    for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
-      let allPixelsInRowAreWhite = true;
-      for (let columnIndex = pixelOffsetFromEdge; columnIndex < (wordleCanvas.width - (pixelOffsetFromEdge * 2)); columnIndex++) {
-        // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
-        const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
-        if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
-          allPixelsInRowAreWhite = false;
-          // break here if the code just breaks the inner loop
-        }
-      }
-      if (allPixelsInRowAreWhite) {
-        whiteRows.push(rowIndex);
-      }
-    }
-
-    // find all white columns
-    const whiteColumns: number[] = [];
-    for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
-      let allPixelsInColumnAreWhite = true;
-      for (let rowIndex = pixelOffsetFromEdge; rowIndex < (wordleCanvas.height - (pixelOffsetFromEdge * 2)); rowIndex++) {
-        // convert rowIndex, columnIndex into index into whiteAtImageDataRGBIndex
-        const indexIntoWhiteAtImageDataRGBIndex = (rowIndex * wordleCanvas.width) + columnIndex;
-        if (!whiteAtImageDataRGBIndex[indexIntoWhiteAtImageDataRGBIndex]) {
-          allPixelsInColumnAreWhite = false;
-          // break here if the code just breaks the inner loop
-        }
-      }
-      if (allPixelsInColumnAreWhite) {
-        whiteColumns.push(columnIndex);
-      }
-    }
-
-    // convert pixels to black in the white rows
-    for (let rowIndex = 0; rowIndex < whiteRows.length; rowIndex++) {
-      const whiteRowIndex = whiteRows[rowIndex];
-      const rowStartIndex = whiteRowIndex * wordleCanvas.width * 4;
-      for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
-        const columnOffset = columnIndex * 4;
-        imageDataRGB[rowStartIndex + columnOffset] = 0;
-        imageDataRGB[rowStartIndex + columnOffset + 1] = 0;
-        imageDataRGB[rowStartIndex + columnOffset + 2] = 0;
-      }
-    }
-
-    // convert pixels to black in the white columns
-    for (let indexIntoWhiteColumns = 0; indexIntoWhiteColumns < whiteColumns.length; indexIntoWhiteColumns++) {
-      const whiteColumnIndex = whiteColumns[indexIntoWhiteColumns];
-      // const columnStartIndex = whiteColumnIndex * wordleCanvas.height * 4;
-      for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
-        const offset = offsetFromPosition(rowIndex, whiteColumnIndex);
-        // const columnOffset = columnIndex * 4;
-        imageDataRGB[offset] = 0;
-        imageDataRGB[offset + 1] = 0;
-        imageDataRGB[offset + 2] = 0;
-      }
-    }
+    convertWhiteColumnsToBlack(whiteColumns, imageDataRGB);
 
     ctx.putImageData(allImageData, 0, 0);
 
-    for (let i = 0; i < imageDataRGB.length; i += 4) {
-      const red = imageDataRGB[i];
-      const green = imageDataRGB[i + 1];
-      const blue = imageDataRGB[i + 2];
-      const letterAnswerType: LetterAnswerType = getLetterAnswerTypeRgb(red, green, blue);
-      if (letterAnswerType !== LetterAnswerType.Unknown) {
-        imageDataRGB[i] = 0;
-        imageDataRGB[i + 1] = 0;
-        imageDataRGB[i + 2] = 0;
-      }
-    }
+    convertBackgroundColorsToBlack(imageDataRGB);
 
     ctx.putImageData(allImageData, 0, 0);
 
-    // imageDataStr looks like
-    //    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA.....
     imageDataBase64 = wordleCanvas.toDataURL();
   };
 
