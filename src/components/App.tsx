@@ -486,7 +486,10 @@ const App = (props: AppProps) => {
   const handleGetGuesses = () => {
     getGuesses();
     props.onGetGuesses(imageDataBase64);
-    processPastedBlob(pastedBlob);
+    setTimeout(function () {
+      processPastedBlob(pastedBlob);
+    }, 2000);
+    // processPastedBlob(pastedBlob);
   };
 
   const handleListWords = () => {
@@ -630,7 +633,7 @@ const App = (props: AppProps) => {
           variant='contained'
           onClick={handleGetGuesses}
         >
-        Get Guesses
+          Get Guesses
         </Button>
         <br />
         Guesses
