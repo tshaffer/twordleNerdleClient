@@ -46,16 +46,14 @@ export interface AppProps {
   onListWords: (imageDataBase64: string) => any;
 }
 
-interface PixelPosition {
-  row: number;
-  column: number;
-}
-
 const App = (props: AppProps) => {
+
+  const pixelOffsetFromEdge = 10;
 
   let wordleCanvas: HTMLCanvasElement;
   let imageDataBase64: string;
   let pastedBlob: any;
+
 
   const dimensionsRef = React.useRef({ imageWidth: -1, imageHeight: -1 });
 
@@ -67,45 +65,34 @@ const App = (props: AppProps) => {
     return offset;
   };
 
-  // invoked when the user clicks on List Words
-  const processImageData = () => {
-
-    wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
-
-    console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
-
-    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
-
-    const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
-    const imageDataRGB: Uint8ClampedArray = allImageData.data;
+  // whiteAtImageDataRGBIndex
+  //    length is canvas width * canvas height
+  //    that is, there's one entry in this array for each set of image pixels (4 bytes) in imageDataRGB
+  //    index into this array for a given rowIndex, columnIndex is therefore
+  //        (rowIndex * canvasWidth) + columnIndex
+  const buildWhiteAtImageDataRGBIndex = (imageDataRGB: Uint8ClampedArray): boolean[] => {
 
     const whiteValue = 255;
 
-    // whiteAtImageDataRGBIndex
-    //    length is canvas width * canvas height
-    //    that is, there's one entry in this array for each set of image pixels (4 bytes) in imageDataRGB
-    //    index into this array for a given rowIndex, columnIndex is therefore
-    //        (rowIndex * canvasWidth) + columnIndex
-
     const whiteAtImageDataRGBIndex: boolean[] = [];
 
-    let whiteCount = 0;
     for (let imageDataIndex = 0; imageDataIndex < imageDataRGB.length; imageDataIndex += 4) {
       const red = imageDataRGB[imageDataIndex];
       const green = imageDataRGB[imageDataIndex + 1];
       const blue = imageDataRGB[imageDataIndex + 2];
       if (red === whiteValue && green == whiteValue && blue === whiteValue) {
         whiteAtImageDataRGBIndex.push(true);
-        whiteCount++;
       } else {
         whiteAtImageDataRGBIndex.push(false);
       }
     }
+    return whiteAtImageDataRGBIndex;
+  };
 
-    const pixelOffsetFromEdge = 10;
+  const buildWhiteRows = (whiteAtImageDataRGBIndex: boolean[]): number[] => {
 
-    // find all white rows
     const whiteRows: number[] = [];
+
     for (let rowIndex = 0; rowIndex < wordleCanvas.height; rowIndex++) {
       let allPixelsInRowAreWhite = true;
       for (let columnIndex = pixelOffsetFromEdge; columnIndex < (wordleCanvas.width - (pixelOffsetFromEdge * 2)); columnIndex++) {
@@ -121,7 +108,10 @@ const App = (props: AppProps) => {
       }
     }
 
-    // find all white columns
+    return whiteRows;
+  };
+
+  const buildWhiteColumns = (whiteAtImageDataRGBIndex: boolean[]): number[] => {
     const whiteColumns: number[] = [];
     for (let columnIndex = 0; columnIndex < wordleCanvas.width; columnIndex++) {
       let allPixelsInColumnAreWhite = true;
@@ -137,8 +127,10 @@ const App = (props: AppProps) => {
         whiteColumns.push(columnIndex);
       }
     }
+    return whiteColumns;
+  };
 
-    // convert pixels to black in the white rows
+  const convertWhiteRowsToBlack = (whiteRows: number[], imageDataRGB: Uint8ClampedArray) => {
     for (let rowIndex = 0; rowIndex < whiteRows.length; rowIndex++) {
       const whiteRowIndex = whiteRows[rowIndex];
       const rowStartIndex = whiteRowIndex * wordleCanvas.width * 4;
@@ -149,8 +141,9 @@ const App = (props: AppProps) => {
         imageDataRGB[rowStartIndex + columnOffset + 2] = 0;
       }
     }
+  };
 
-    // convert pixels to black in the white columns
+  const convertWhiteColumnsToBlack = (whiteColumns: number[], imageDataRGB: Uint8ClampedArray) => {
     for (let indexIntoWhiteColumns = 0; indexIntoWhiteColumns < whiteColumns.length; indexIntoWhiteColumns++) {
       const whiteColumnIndex = whiteColumns[indexIntoWhiteColumns];
       // const columnStartIndex = whiteColumnIndex * wordleCanvas.height * 4;
@@ -162,6 +155,33 @@ const App = (props: AppProps) => {
         imageDataRGB[offset + 2] = 0;
       }
     }
+  };
+
+  // invoked when the user clicks on List Words
+  const processImageData = () => {
+
+    wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
+
+    console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
+
+    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
+
+    const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
+    const imageDataRGB: Uint8ClampedArray = allImageData.data;
+
+    const whiteAtImageDataRGBIndex: boolean[] = buildWhiteAtImageDataRGBIndex(imageDataRGB);
+
+    // find all white rows
+    const whiteRows: number[] = buildWhiteRows(whiteAtImageDataRGBIndex);
+
+    // find all white columns
+    const whiteColumns: number[] = buildWhiteColumns(whiteAtImageDataRGBIndex);
+
+    // convert pixels to black in the white rows
+    convertWhiteRowsToBlack(whiteRows, imageDataRGB);
+
+    // convert pixels to black in the white columns
+    convertWhiteColumnsToBlack(whiteColumns, imageDataRGB);
 
     ctx.putImageData(allImageData, 0, 0);
 
