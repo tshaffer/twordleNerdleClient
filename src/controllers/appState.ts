@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { TedState } from '../types';
-import { setPossibleWords, setLetterAtLocation, setLettersNotAtLocation, setLettersNotInWord, addGuess, updateGuess, setGuesses } from '../models';
+import { setPossibleWords, setLetterAtLocation, setLettersNotAtLocation, setLettersNotInWord, addGuess, updateGuess, setGuesses, setPathOnServer } from '../models';
 import { getLettersAtExactLocation, getLettersNotAtExactLocation, getLettersNotInWord, getGuesses } from '../selectors';
 
 import { apiUrlFragment, serverUrl } from '../index';
@@ -163,8 +163,12 @@ export const cnUploadFile = (formData: FormData): any => {
     }).then((response) => {
       console.log(response);
       console.log(response.statusText);
-      const guesses: string[] = response.data.guesses;
+      const guesses: string[] = response.data.guesses.guesses;
       dispatch(setGuesses(guesses));
+
+      const file = response.data.file;
+      const pathOnServer = file.path;
+      dispatch(setPathOnServer(pathOnServer));
     });
   };
 };

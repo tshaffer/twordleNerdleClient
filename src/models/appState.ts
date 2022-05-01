@@ -13,10 +13,26 @@ const SET_LETTER_AT_LOCATION = 'SET_LETTER_AT_LOCATION';
 const SET_LETTERS_NOT_AT_LOCATION = 'ADD_LETTER_NOT_AT_LOCATION';
 const SET_LETTERS_NOT_IN_WORD = 'SET_LETTERS_NOT_IN_WORD';
 const SET_POSSIBLE_WORDS = 'SET_POSSIBLE_WORDS';
+const SET_PATH_ON_SERVER = 'SET_PATH_ON_SERVER';
 
 // ------------------------------------
 // Actions
 // ------------------------------------
+
+export interface SetPathOnServer {
+  pathOnServer: string;
+}
+
+export const setPathOnServer = (
+  pathOnServer: string
+): any => {
+  return {
+    type: SET_PATH_ON_SERVER,
+    payload: {
+      pathOnServer
+    }
+  };
+};
 
 export interface SetGuesses {
   guesses: string[],
@@ -135,15 +151,19 @@ const initialState: AppState = {
   lettersNotAtExactLocation: ['', '', '', '', ''],
   lettersNotInWord: '',
   possibleWords: [],
+  pathOnServer: '',
 };
 
 export const appStateReducer = (
   state: AppState = initialState,
-  action: TedModelBaseAction<SetGuesses & UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords>
+  action: TedModelBaseAction<SetGuesses & UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords & SetPathOnServer>
 ): AppState => {
   switch (action.type) {
     case SET_GUESSES: {
       return { ...state, guesses: action.payload.guesses };
+    }
+    case SET_PATH_ON_SERVER: {
+      return { ...state, pathOnServer: action.payload.pathOnServer };
     }
     case ADD_GUESS: {
       const newState = cloneDeep(state);

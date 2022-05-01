@@ -23,3 +23,7 @@ export const getPossibleWords = (state: TedState): string[] => {
 export const getInputError = (state: TedState): string | null => {
   return null;
 };
+
+export const getPathOnServer = (state: TedState): string => {
+  return state.appState.pathOnServer;
+};
