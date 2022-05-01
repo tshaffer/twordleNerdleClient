@@ -160,8 +160,11 @@ export const cnUploadFile = (formData: FormData): any => {
   return (dispatch: any, getState: any) => {
     const path = serverUrl + apiUrlFragment + 'upload';
     axios.post(path, formData, {
-    }).then(res => {
-      console.log(res.statusText);
+    }).then((response) => {
+      console.log(response);
+      console.log(response.statusText);
+      const guesses: string[] = response.data.guesses;
+      dispatch(setGuesses(guesses));
     });
   };
 };
