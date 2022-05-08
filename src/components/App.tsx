@@ -24,7 +24,7 @@ import {
   getInputError,
   getGuesses,
 } from '../selectors';
-import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
+import { List, ListItem, ListItemText, ListSubheader, Paper, Typography } from '@mui/material';
 import { isNil } from 'lodash';
 
 export interface AppProps {
@@ -174,10 +174,13 @@ const App = (props: AppProps) => {
         noValidate
         autoComplete='off'
       >
-        <input type="file" name="file" onChange={handleFileChangeHandler}/>
+        <input type="file" name="file" onChange={handleFileChangeHandler} />
         <br />
-        <button type="button" onClick={handleUploadFile}>Upload</button> 
+        <button type="button" onClick={handleUploadFile}>Upload</button>
         <br />
+        <Typography variant="button" display="block" gutterBottom>
+          Guesses
+        </Typography>
         {guesses}
         <br />
         <br />
