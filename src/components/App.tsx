@@ -18,6 +18,9 @@ import {
   cnListWords,
   cnUploadFile,
 } from '../controllers';
+import {
+  addGuess,
+} from '../models';
 
 import {
   getPossibleWords,
@@ -29,6 +32,7 @@ import { isNil } from 'lodash';
 
 export interface AppProps {
   guesses: string[];
+  onAddGuess: () => any;
   onGetGuesses: (imageDataBase64: string) => any;
   onUpdateGuess: (guessIndex: number, guess: string) => any;
   possibleWords: string[];
@@ -56,6 +60,10 @@ const App = (props: AppProps) => {
     const data = new FormData();
     data.append('file', selectedFile);
     props.onUploadFile(data);
+  };
+
+  const handleAddGuess = () => {
+    props.onAddGuess();
   };
 
   const handleListWords = () => {
@@ -183,6 +191,13 @@ const App = (props: AppProps) => {
         </Typography>
         {guesses}
         <br />
+        <Button
+          variant='contained'
+          onClick={handleAddGuess}
+        >
+          Add Guess
+        </Button>
+        <br />
         <br />
         <Button
           variant='contained'
@@ -207,6 +222,7 @@ function mapStateToProps(state: any) {
 
 const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
+    onAddGuess: addGuess,
     onGetGuesses: cnGetGuesses,
     onUpdateGuess: cnUpdateGuess,
     onListWords: cnListWords,
