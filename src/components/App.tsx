@@ -16,9 +16,6 @@ import {
   cnGetGuesses,
   cnUpdateGuess,
   cnListWords,
-  cnSetLetterAtLocation,
-  cnSetLettersNotAtLocation,
-  cnSetLettersNotInWord,
   cnUploadFile,
 } from '../controllers';
 
@@ -29,12 +26,10 @@ import {
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
-import { LetterAnswerType } from '../types';
 import {
   buildWhiteAtImageDataRGBIndex,
   convertWhiteColumnsToBlack,
   convertWhiteRowsToBlack,
-  getLetterAnswerType,
   getWhiteColumns,
   getWhiteRows,
   convertBackgroundColorsToBlack,
@@ -50,9 +45,6 @@ export interface AppProps {
   onUpdateGuess: (guessIndex: number, guess: string) => any;
   possibleWords: string[];
   inputError: string | null;
-  onSetLetterAtLocation: (index: number, letterAtLocation: string,) => any;
-  onSetLettersNotAtLocation: (index: number, lettersNotAtLocation: string) => any;
-  onSetLettersNotInWord: (lettersNotInWord: string) => any;
   onListWords: (imageDataBase64: string) => any;
   onUploadFile: (formData: FormData) => any;
 }
@@ -68,51 +60,6 @@ const App = (props: AppProps) => {
   const [selectedFile, setSelectedFile] = React.useState(null);
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
-
-  const getLettersNotInWord = (ctx: CanvasRenderingContext2D, guesses: string[], numRows: number, numColumns: number, pixelsPerColumn: number, pixelsPerRow: number): string => {
-
-    let lettersNotInWord: string = '';
-
-    const letterAnswerValues: LetterAnswerType[][] = [];
-    const lettersAtExactLocation: string[] = ['', '', '', '', ''];
-    const lettersNotAtExactLocation: string[] = ['', '', '', '', ''];
-
-    for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-      letterAnswerValues.push([]);
-      const letterAnswersInRow = letterAnswerValues[rowIndex];
-      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
-        // console.log('row: ', rowIndex, 'column: ', columnIndex);
-        const x = (columnIndex * pixelsPerColumn) + (pixelsPerColumn / 8);
-        const y = (rowIndex * pixelsPerRow) + (pixelsPerRow / 8);
-        // console.log('x = ', x, ', y = ', y);
-
-        const imgData: ImageData = ctx.getImageData(x, y, 10, 10);
-
-        const letterAnswerType: LetterAnswerType = getLetterAnswerType(imgData);
-
-        letterAnswersInRow.push(letterAnswerType);
-
-        const currentCharacter: string = guesses[rowIndex].charAt(columnIndex);
-
-        switch (letterAnswerType) {
-          case LetterAnswerType.InWordAtExactLocation:
-            lettersAtExactLocation[columnIndex] = currentCharacter;
-            props.onSetLetterAtLocation(columnIndex, currentCharacter);
-            break;
-          case LetterAnswerType.InWordAtNonLocation:
-            lettersNotAtExactLocation[columnIndex] = lettersNotAtExactLocation[columnIndex] + currentCharacter;
-            props.onSetLettersNotAtLocation(columnIndex, lettersNotAtExactLocation[columnIndex]);
-            break;
-          case LetterAnswerType.NotInWord:
-          default:
-            lettersNotInWord = lettersNotInWord + currentCharacter;
-            break;
-        }
-      }
-    }
-
-    return lettersNotInWord;
-  };
 
   // invoked when the user clicks on List Words
   const processImageData = () => {
@@ -137,22 +84,6 @@ const App = (props: AppProps) => {
     convertWhiteColumnsToBlack(wordleCanvas.width, wordleCanvas.height, whiteColumns, imageDataRGB);
 
     ctx.putImageData(allImageData, 0, 0);
-
-    const enteredWords: string[] = [];
-    for (let i = 0; i < props.guesses.length; i++) {
-      if (props.guesses[i] !== '') {
-        enteredWords.push(props.guesses[i]);
-      }
-    }
-
-    const numRows = enteredWords.length;
-    const numColumns = 5;
-
-    const pixelsPerColumn = dimensionsRef.current.imageWidth / numColumns;
-    const pixelsPerRow = dimensionsRef.current.imageHeight / numRows;
-
-    const lettersNotInWord = getLettersNotInWord(ctx, enteredWords, numRows, numColumns, pixelsPerRow, pixelsPerColumn);
-    props.onSetLettersNotInWord(lettersNotInWord);
 
     const wordleImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
 
@@ -302,9 +233,6 @@ const App = (props: AppProps) => {
       processImageData();
       setListWordsInvoked(true);
       props.onListWords(imageDataBase64);
-      // setTimeout(function () {
-      //   processPastedBlob(pastedBlob);
-      // }, 500);
     } else {
       console.log('Error: ' + props.inputError);
       setErrorDialogOpen(true);
@@ -433,13 +361,6 @@ const App = (props: AppProps) => {
         >
         </canvas>
         <br />
-        <Button
-          variant='contained'
-          onClick={handleGetGuesses}
-        >
-          Get Guesses
-        </Button>
-        <br />
         {guesses}
         <br />
         <br />
@@ -468,9 +389,6 @@ const mapDispatchToProps = (dispatch: any) => {
   return bindActionCreators({
     onGetGuesses: cnGetGuesses,
     onUpdateGuess: cnUpdateGuess,
-    onSetLetterAtLocation: cnSetLetterAtLocation,
-    onSetLettersNotAtLocation: cnSetLettersNotAtLocation,
-    onSetLettersNotInWord: cnSetLettersNotInWord,
     onListWords: cnListWords,
     onUploadFile: cnUploadFile,
   }, dispatch);

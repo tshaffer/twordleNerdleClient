@@ -3,23 +3,9 @@ import {
   InWordAtNonLocationValue,
   LetterAnswerType,
   NotInWordValue,
-  WhiteLetterValue
 } from '../types';
 
 const pixelOffsetFromEdge = 10;
-
-export const getLetterAnswerType = (imgData: ImageData): LetterAnswerType => {
-  if (isLetterAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
-    return LetterAnswerType.InWordAtExactLocation;
-  } else if (isLetterNotAtExactLocation(imgData.data[0], imgData.data[1], imgData.data[2])) {
-    return LetterAnswerType.InWordAtNonLocation;
-  } else if (isLetterNotInWord(imgData.data[0], imgData.data[1], imgData.data[2])) {
-    return LetterAnswerType.NotInWord;
-    // } else if (!isLetterWhite(imgData.data[0], imgData.data[1], imgData.data[2])) {
-    //   console.log('letter unknown but not white: ', imgData.data[0], imgData.data[1], imgData.data[2]);
-  }
-  return LetterAnswerType.Unknown;
-};
 
 const getLetterAnswerTypeRgb = (red: any, green: any, blue: any): LetterAnswerType => {
   if (isLetterAtExactLocation(red, green, blue)) {
@@ -28,8 +14,6 @@ const getLetterAnswerTypeRgb = (red: any, green: any, blue: any): LetterAnswerTy
     return LetterAnswerType.InWordAtNonLocation;
   } else if (isLetterNotInWord(red, green, blue)) {
     return LetterAnswerType.NotInWord;
-    // } else if (!isLetterWhite(red, green, blue)) {
-    //   console.log('letter unknown but not white: ', red, green, blue);
   }
   return LetterAnswerType.Unknown;
 };

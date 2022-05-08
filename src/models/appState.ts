@@ -9,9 +9,6 @@ import { TedModelBaseAction } from './baseAction';
 const SET_GUESSES = 'SET_GUESSES';
 const ADD_GUESS = 'ADD_GUESS';
 const UPDATE_GUESS = 'UPDATE_GUESS';
-const SET_LETTER_AT_LOCATION = 'SET_LETTER_AT_LOCATION';
-const SET_LETTERS_NOT_AT_LOCATION = 'ADD_LETTER_NOT_AT_LOCATION';
-const SET_LETTERS_NOT_IN_WORD = 'SET_LETTERS_NOT_IN_WORD';
 const SET_POSSIBLE_WORDS = 'SET_POSSIBLE_WORDS';
 const SET_PATH_ON_SERVER = 'SET_PATH_ON_SERVER';
 
@@ -75,57 +72,6 @@ export const updateGuess = (
   };
 };
 
-export interface SetLetterAtLocation {
-  index: number;
-  letterAtLocation: string;
-}
-
-export const setLetterAtLocation = (
-  index: number,
-  letterAtLocation: string,
-): any => {
-  return {
-    type: SET_LETTER_AT_LOCATION,
-    payload: {
-      index,
-      letterAtLocation,
-    },
-  };
-};
-
-export interface SetLettersNotAtLocation {
-  index: number;
-  lettersNotAtLocation: string;
-}
-
-export const setLettersNotAtLocation = (
-  index: number,
-  lettersNotAtLocation: string,
-): any => {
-  return {
-    type: SET_LETTERS_NOT_AT_LOCATION,
-    payload: {
-      index,
-      lettersNotAtLocation,
-    },
-  };
-};
-
-export interface SetLettersNotInWord {
-  lettersNotInWord: string,
-}
-
-export const setLettersNotInWord = (
-  lettersNotInWord: string,
-): any => {
-  return {
-    type: SET_LETTERS_NOT_IN_WORD,
-    payload: {
-      lettersNotInWord,
-    },
-  };
-};
-
 export interface SetPossibleWords {
   possibleWords: string[],
 }
@@ -147,16 +93,13 @@ export const setPossibleWords = (
 
 const initialState: AppState = {
   guesses: [],
-  lettersAtExactLocation: ['', '', '', '', ''],
-  lettersNotAtExactLocation: ['', '', '', '', ''],
-  lettersNotInWord: '',
   possibleWords: [],
   pathOnServer: '',
 };
 
 export const appStateReducer = (
   state: AppState = initialState,
-  action: TedModelBaseAction<SetGuesses & UpdateGuess & SetLetterAtLocation & SetLettersNotAtLocation & SetLettersNotInWord & SetPossibleWords & SetPathOnServer>
+  action: TedModelBaseAction<SetGuesses & UpdateGuess  & SetPossibleWords & SetPathOnServer>
 ): AppState => {
   switch (action.type) {
     case SET_GUESSES: {
@@ -174,19 +117,6 @@ export const appStateReducer = (
       const newState = cloneDeep(state);
       newState.guesses[action.payload.guessIndex] = action.payload.guess;
       return newState;
-    }
-    case SET_LETTER_AT_LOCATION: {
-      const newState = cloneDeep(state);
-      newState.lettersAtExactLocation[action.payload.index] = action.payload.letterAtLocation;
-      return newState;
-    }
-    case SET_LETTERS_NOT_AT_LOCATION: {
-      const newState = cloneDeep(state);
-      newState.lettersNotAtExactLocation[action.payload.index] = action.payload.lettersNotAtLocation;
-      return newState;
-    }
-    case SET_LETTERS_NOT_IN_WORD: {
-      return { ...state, lettersNotInWord: action.payload.lettersNotInWord };
     }
     case SET_POSSIBLE_WORDS: {
       return { ...state, possibleWords: action.payload.possibleWords };
