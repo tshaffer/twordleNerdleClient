@@ -53,9 +53,6 @@ const App = (props: AppProps) => {
 
   let wordleCanvas: HTMLCanvasElement;
   let imageDataBase64: string;
-  let pastedBlob: any;
-
-  const dimensionsRef = React.useRef({ imageWidth: -1, imageHeight: -1 });
 
   const [selectedFile, setSelectedFile] = React.useState(null);
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
@@ -98,115 +95,8 @@ const App = (props: AppProps) => {
     // imageDataStr can be plugged directly into request.json
   };
 
-  const getGuesses = () => {
-
-    wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
-
-    console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
-
-    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
-    const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
-    const imageDataRGB: Uint8ClampedArray = allImageData.data;
-
-    const whiteAtImageDataRGBIndex: boolean[] = buildWhiteAtImageDataRGBIndex(imageDataRGB);
-
-    const pixelOffsetFromEdge = 10;
-    const whiteValue = 255;
-
-    const whiteRows: number[] = getWhiteRows(wordleCanvas.width, whiteAtImageDataRGBIndex);
-
-    const whiteColumns: number[] = getWhiteColumns(wordleCanvas.width, wordleCanvas.height, whiteAtImageDataRGBIndex);
-
-    convertWhiteRowsToBlack(wordleCanvas.width, whiteRows, imageDataRGB);
-
-    convertWhiteColumnsToBlack(wordleCanvas.width, wordleCanvas.height, whiteColumns, imageDataRGB);
-
-    ctx.putImageData(allImageData, 0, 0);
-
-    convertBackgroundColorsToBlack(imageDataRGB);
-
-    ctx.putImageData(allImageData, 0, 0);
-
-    imageDataBase64 = wordleCanvas.toDataURL();
-  };
-
   const updateGuess = (guessIndex: number, guessValue: string) => {
     props.onUpdateGuess(guessIndex, guessValue);
-  };
-
-  // invoked on paste event
-  const retrieveImageFromClipboardAsBlob = (pasteEvent) => {
-
-    if (pasteEvent.clipboardData == false) {
-      processImageBlob(undefined);
-    }
-
-    const items = pasteEvent.clipboardData.items;
-
-    if (items == undefined) {
-      processImageBlob(undefined);
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      // Skip content if not image
-      if (items[i].type.indexOf('image') == -1) continue;
-      // Retrieve image on clipboard as blob
-      const blob = items[i].getAsFile();
-
-      pastedBlob = blob;
-
-      processPastedBlob(blob);
-    }
-  };
-
-  const processPastedBlob = (blob: any) => {
-    const fr = new FileReader();
-    fr.onload = function () { // file is loaded
-      const img = new Image;
-
-      img.onload = function () {
-        dimensionsRef.current = { imageWidth: img.width, imageHeight: img.height };
-        console.log('img.width = ', img.width, 'img.height = ', img.height);
-        console.log('dimensionsRef: ', dimensionsRef.current);
-
-        processImageBlob(blob);
-      };
-
-      img.src = fr.result as any; // is the data URL because called with readAsDataURL
-    };
-
-    fr.readAsDataURL(blob);
-  };
-
-  // invoked after pasted image data is loaded
-  const processImageBlob = (imageBlob) => {
-
-    if (imageBlob) {
-      wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
-      const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
-
-      // Create an image to render the blob on the canvas
-      const img = new Image();
-
-      // Once the image loads, render the img on the canvas
-      img.onload = function () {
-
-        // Update dimensions of the canvas with the dimensions of the image
-        wordleCanvas.width = dimensionsRef.current.imageWidth;
-        wordleCanvas.height = dimensionsRef.current.imageHeight;
-
-        // Draw the image
-        console.log('dimensionsRef: ', dimensionsRef.current);
-        ctx.drawImage(img, 0, 0);
-      };
-
-      // Crossbrowser support for URL
-      const URLObj = window.URL || window.webkitURL;
-
-      // Creates a DOMString containing a URL representing the object given in the parameter
-      // namely the original Blob
-      img.src = URLObj.createObjectURL(imageBlob);
-    }
   };
 
   const handleFileChangeHandler = (e: any) => {
@@ -218,14 +108,6 @@ const App = (props: AppProps) => {
     const data = new FormData();
     data.append('file', selectedFile);
     props.onUploadFile(data);
-  };
-
-  const handleGetGuesses = () => {
-    getGuesses();
-    props.onGetGuesses(imageDataBase64);
-    setTimeout(function () {
-      processPastedBlob(pastedBlob);
-    }, 500);
   };
 
   const handleListWords = () => {
@@ -241,10 +123,6 @@ const App = (props: AppProps) => {
 
   const handleCloseErrorDialog = () => {
     setErrorDialogOpen(false);
-  };
-
-  const handleClipboardEvent = (e: ClipboardEvent<HTMLInputElement>) => {
-    retrieveImageFromClipboardAsBlob(e);
   };
 
   const renderGuess = (guess: string, guessIndex: number) => {
@@ -319,9 +197,7 @@ const App = (props: AppProps) => {
   const wordListElement = renderWordListElement();
 
   return (
-    <div
-      onPaste={handleClipboardEvent}
-    >
+    <div>
       <Dialog
         open={errorDialogOpen}
         onClose={handleCloseErrorDialog}
