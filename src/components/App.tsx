@@ -26,74 +26,22 @@ import {
 } from '../selectors';
 import { List, ListItem, ListItemText, ListSubheader, Paper } from '@mui/material';
 import { isNil } from 'lodash';
-import {
-  buildWhiteAtImageDataRGBIndex,
-  convertWhiteColumnsToBlack,
-  convertWhiteRowsToBlack,
-  getWhiteColumns,
-  getWhiteRows,
-  convertBackgroundColorsToBlack,
-} from '../utilities';
 
-import { SyntheticEvent } from 'react';
-interface ClipboardEvent<T = Element> extends SyntheticEvent<T, any> {
-  clipboardData: DataTransfer;
-}
 export interface AppProps {
   guesses: string[];
   onGetGuesses: (imageDataBase64: string) => any;
   onUpdateGuess: (guessIndex: number, guess: string) => any;
   possibleWords: string[];
   inputError: string | null;
-  onListWords: (imageDataBase64: string) => any;
+  onListWords: () => any;
   onUploadFile: (formData: FormData) => any;
 }
 
 const App = (props: AppProps) => {
 
-  let wordleCanvas: HTMLCanvasElement;
-  let imageDataBase64: string;
-
   const [selectedFile, setSelectedFile] = React.useState(null);
   const [listWordsInvoked, setListWordsInvoked] = React.useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
-
-  // invoked when the user clicks on List Words
-  const processImageData = () => {
-
-    wordleCanvas = document.getElementById('mycanvas') as HTMLCanvasElement;
-
-    console.log('wordleCanvas dimensions: ', wordleCanvas.width, wordleCanvas.height);
-
-    const ctx: CanvasRenderingContext2D = wordleCanvas.getContext('2d');
-
-    const allImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
-    const imageDataRGB: Uint8ClampedArray = allImageData.data;
-
-    const whiteAtImageDataRGBIndex: boolean[] = buildWhiteAtImageDataRGBIndex(imageDataRGB);
-
-    const whiteRows: number[] = getWhiteRows(wordleCanvas.width, whiteAtImageDataRGBIndex);
-
-    const whiteColumns: number[] = getWhiteColumns(wordleCanvas.width, wordleCanvas.height, whiteAtImageDataRGBIndex);
-
-    convertWhiteRowsToBlack(wordleCanvas.width, whiteRows, imageDataRGB);
-
-    convertWhiteColumnsToBlack(wordleCanvas.width, wordleCanvas.height, whiteColumns, imageDataRGB);
-
-    ctx.putImageData(allImageData, 0, 0);
-
-    const wordleImageData: ImageData = ctx.getImageData(0, 0, wordleCanvas.width, wordleCanvas.height);
-
-    convertBackgroundColorsToBlack(wordleImageData.data);
-
-    ctx.putImageData(wordleImageData, 0, 0);
-
-    // imageDataStr looks like
-    //    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA.....
-    imageDataBase64 = wordleCanvas.toDataURL();
-
-    // imageDataStr can be plugged directly into request.json
-  };
 
   const updateGuess = (guessIndex: number, guessValue: string) => {
     props.onUpdateGuess(guessIndex, guessValue);
@@ -112,9 +60,8 @@ const App = (props: AppProps) => {
 
   const handleListWords = () => {
     if (isNil(props.inputError)) {
-      processImageData();
       setListWordsInvoked(true);
-      props.onListWords(imageDataBase64);
+      props.onListWords();
     } else {
       console.log('Error: ' + props.inputError);
       setErrorDialogOpen(true);
@@ -230,12 +177,6 @@ const App = (props: AppProps) => {
         <input type="file" name="file" onChange={handleFileChangeHandler}/>
         <br />
         <button type="button" onClick={handleUploadFile}>Upload</button> 
-        <br />
-        <canvas
-          style={{ border: '1px solid grey' }}
-          id='mycanvas'
-        >
-        </canvas>
         <br />
         {guesses}
         <br />
